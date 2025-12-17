@@ -234,3 +234,14 @@ terraform destroy -var="project_id=${PROJECT_ID}" -var="environment=dev"
 ```bash
 terraform force-unlock LOCK_ID
 ```
+
+### Local Debugging (Impersonation)
+If you see `PERMISSION_DENIED` when running `gcloud ... --impersonate-service-account`, you need to grant your user account the ability to create tokens for the Service Account:
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding "chuck-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --project="${PROJECT_ID}" \
+  --member="user:your-email@gmail.com" \
+  --role="roles/iam.serviceAccountTokenCreator"
+```
+*Note: This permission can take 1-2 minutes to propagate.*
