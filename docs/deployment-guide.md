@@ -48,6 +48,7 @@ for ROLE in \
   roles/artifactregistry.admin \
   roles/compute.admin \
   roles/iam.serviceAccountUser \
+  roles/iam.serviceAccountTokenCreator \
   roles/storage.admin
 do
   gcloud projects add-iam-policy-binding $PROJECT_ID \
