@@ -27,12 +27,7 @@ gcloud artifacts repositories create chuck-registry \
     --location=${REGION} \
     --description="Docker repository for Chuck Norris app"
 ```
-  run.googleapis.com \
-  artifactregistry.googleapis.com \
-  compute.googleapis.com \
-  iam.googleapis.com \
-  iamcredentials.googleapis.com
-```
+
 
 ### Create Terraform State Bucket
 
