@@ -45,9 +45,3 @@ variable "max_instances" {
   type        = number
   default     = 10
 }
-
-variable "create_registry" {
-  description = "Whether to create the Artifact Registry repository (should be true only for one environment, e.g. dev)"
-  type        = bool
-  default     = false
-}

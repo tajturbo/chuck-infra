@@ -102,7 +102,6 @@ jobs:
             -var="environment=${{ inputs.environment }}" \
             -var="region=${{ env.REGION }}" \
             -var="secondary_region=${{ env.SECONDARY_REGION }}" \
-            -var="create_registry=$([[ "${{ inputs.environment }}" == "dev" ]] && echo "true" || echo "false")" \
             -auto-approve
 
       - name: Terraform Outputs

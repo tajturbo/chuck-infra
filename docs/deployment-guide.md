@@ -5,20 +5,28 @@ Complete guide for deploying the Chuck Norris Jokes application to GCP.
 ## Prerequisites
 
 - GCP project with billing enabled
-- `gcloud` CLI installed and authenticated
-- Terraform 1.5+
-- GitHub repository with Actions enabled
+- `gcloud` CLI installed
+### 2. Infrastructure Prerequisites
+You will need:
+1.  A **GCP Project** with billing enabled.
+2.  A **GCS Bucket** for Terraform state.
+3.  An **Artifact Registry** repository (Docker format).
 
-## 1. GCP Project Setup
-
-### Enable APIs
-
+Run these commands to set them up:
 ```bash
+# Set your project ID
 export PROJECT_ID="your-project-id"
+export REGION="us-central1"
 
-gcloud config set project $PROJECT_ID
+# Create State Bucket
+gcloud storage buckets create gs://${PROJECT_ID}-tfstate --location=${REGION}
 
-gcloud services enable \
+# Create Artifact Registry (Manual Step)
+gcloud artifacts repositories create chuck-registry \
+    --repository-format=docker \
+    --location=${REGION} \
+    --description="Docker repository for Chuck Norris app"
+```
   run.googleapis.com \
   artifactregistry.googleapis.com \
   compute.googleapis.com \
