@@ -77,6 +77,7 @@ jobs:
             -var="region=${{ env.REGION }}" \
             -var="secondary_region=${{ env.SECONDARY_REGION }}" \
             -var="image_tag=${{ github.sha }}" \
+            -var="create_registry=$([[ "${{ inputs.environment }}" == "dev" ]] && echo "true" || echo "false")" \
             -out=tfplan \
             -no-color
         continue-on-error: true
@@ -98,6 +99,7 @@ jobs:
             -var="environment=${{ inputs.environment }}" \
             -var="region=${{ env.REGION }}" \
             -var="secondary_region=${{ env.SECONDARY_REGION }}" \
+            -var="create_registry=$([[ "${{ inputs.environment }}" == "dev" ]] && echo "true" || echo "false")" \
             -auto-approve
 
       - name: Terraform Outputs
@@ -109,45 +111,3 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           terraform output >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
-  # Separate job for registry (run once, shared across envs)
-  registry:
-    name: Setup Registry (if needed)
-    runs-on: ubuntu-latest
-    if: inputs.action == 'apply'
-    
-    permissions:
-      contents: read
-      id-token: write
-
-    defaults:
-      run:
-        working-directory: infra/registry
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-
-      - name: Terraform Init
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-            -backend-config="prefix=chuck-registry"
-
-      - name: Terraform Apply Registry
-        run: |
-          terraform apply \
-            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
-            -var="region=${{ env.REGION }}" \
-            -auto-approve
