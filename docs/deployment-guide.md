@@ -129,19 +129,11 @@ Add these secrets to your GitHub repository:
 
 ## 4. Initial Deployment
 
-### Step 1: Create Docker Registry
-
-Run `infra-provision` workflow:
-- Environment: `dev` (any environment works for registry)
-- Action: `apply`
-
-This creates the shared `chuck-registry` Artifact Registry.
-
-### Step 2: Build and Push First Image
+### Step 1: Build and Push First Image
 
 Push code to `main` branch or run `docker-build` workflow.
 
-### Step 3: Provision Infrastructure
+### Step 2: Provision Infrastructure
 
 Run `infra-provision` workflow:
 - Environment: `dev`
@@ -150,7 +142,7 @@ Run `infra-provision` workflow:
 
 Repeat for `stg` and `prod` as needed.
 
-### Step 4: Deploy Application
+### Step 3: Deploy Application
 
 Run `app-deploy` workflow or let it auto-trigger after build.
 
