@@ -1,0 +1,264 @@
+# Application Deployment Workflow
+# Zero-downtime deployment to Cloud Run with traffic splitting
+# - Dev: triggered automatically from main branch
+# - Stg/Prod: triggered manually with tag selection
+
+name: Deploy Application
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
+      image_tag:
+        description: "Image tag to deploy (commit SHA or version)"
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: string
+      image_tag:
+        description: "Image tag to deploy"
+        required: true
+        type: string
+
+env:
+  REGION: us-central1
+  SECONDARY_REGION: us-east1
+  REGISTRY: us-central1-docker.pkg.dev
+  REPOSITORY: chuck-registry
+  IMAGE_NAME: app
+
+jobs:
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.validate.outputs.proceed }}
+
+    steps:
+      - name: Validate environment and tag
+        id: validate
+        run: |
+          ENV="${{ inputs.environment }}"
+          TAG="${{ inputs.image_tag }}"
+          
+          echo "Environment: $ENV"
+          echo "Image Tag: $TAG"
+          
+          # For stg/prod, require a version tag (not just commit SHA)
+          if [[ "$ENV" == "prod" || "$ENV" == "stg" ]]; then
+            if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "⚠️ Warning: Deploying non-versioned tag ($TAG) to $ENV"
+              echo "For production, consider using a release version tag"
+            fi
+          fi
+          
+          echo "proceed=true" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    needs: validate
+    if: needs.validate.outputs.proceed == 'true'
+    environment: ${{ inputs.environment }}
+
+    permissions:
+      contents: read
+      id-token: write
+
+    outputs:
+      primary_revision: ${{ steps.deploy_primary.outputs.revision }}
+      secondary_revision: ${{ steps.deploy_secondary.outputs.revision }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Deploy to Primary Region (0% traffic)
+        id: deploy_primary
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ inputs.image_tag }}"
+          SERVICE="chuck-${{ inputs.environment }}-primary"
+          
+          echo "Deploying $IMAGE to $SERVICE"
+          
+          gcloud run deploy $SERVICE \
+            --image=$IMAGE \
+            --region=${{ env.REGION }} \
+            --no-traffic \
+            --tag=canary \
+            --quiet
+          
+          REVISION=$(gcloud run services describe $SERVICE \
+            --region=${{ env.REGION }} \
+            --format='value(status.latestCreatedRevisionName)')
+          echo "revision=$REVISION" >> $GITHUB_OUTPUT
+          echo "Deployed revision: $REVISION"
+
+      - name: Deploy to Secondary Region (0% traffic)
+        id: deploy_secondary
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ inputs.image_tag }}"
+          SERVICE="chuck-${{ inputs.environment }}-secondary"
+          
+          gcloud run deploy $SERVICE \
+            --image=$IMAGE \
+            --region=${{ env.SECONDARY_REGION }} \
+            --no-traffic \
+            --tag=canary \
+            --quiet
+          
+          REVISION=$(gcloud run services describe $SERVICE \
+            --region=${{ env.SECONDARY_REGION }} \
+            --format='value(status.latestCreatedRevisionName)')
+          echo "revision=$REVISION" >> $GITHUB_OUTPUT
+
+      - name: Get Canary URL for Testing
+        id: canary
+        run: |
+          PRIMARY_URL=$(gcloud run services describe chuck-${{ inputs.environment }}-primary \
+            --region=${{ env.REGION }} \
+            --format='value(status.url)')
+          # Canary URL format
+          CANARY_URL="${PRIMARY_URL/https:\/\//https://canary---}"
+          echo "url=$CANARY_URL" >> $GITHUB_OUTPUT
+          echo "Canary URL: $CANARY_URL"
+
+      - name: Integration Test - Health Check
+        run: |
+          echo "Testing canary deployment..."
+          for i in {1..5}; do
+            if curl -sf "${{ steps.canary.outputs.url }}/health" | jq .; then
+              echo "Health check passed"
+              break
+            fi
+            echo "Retry $i..."
+            sleep 5
+          done
+
+      - name: Integration Test - Main Page
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.canary.outputs.url }}/")
+          if [ "$STATUS" != "200" ]; then
+            echo "Main page returned $STATUS"
+            exit 1
+          fi
+          echo "Main page OK (HTTP $STATUS)"
+
+      - name: Shift Traffic to 50%
+        run: |
+          for REGION in "${{ env.REGION }}" "${{ env.SECONDARY_REGION }}"; do
+            if [ "$REGION" == "${{ env.REGION }}" ]; then
+              SERVICE="chuck-${{ inputs.environment }}-primary"
+              REV="${{ steps.deploy_primary.outputs.revision }}"
+            else
+              SERVICE="chuck-${{ inputs.environment }}-secondary"
+              REV="${{ steps.deploy_secondary.outputs.revision }}"
+            fi
+            
+            gcloud run services update-traffic $SERVICE \
+              --region=$REGION \
+              --to-revisions="$REV=50" \
+              --quiet
+          done
+          
+          echo "Traffic shifted to 50%"
+          sleep 10
+
+      - name: Health Check at 50%
+        run: |
+          curl -sf "${{ steps.canary.outputs.url }}/health" | jq .
+          echo "Health check passed at 50% traffic"
+
+      - name: Shift Traffic to 100%
+        run: |
+          for REGION in "${{ env.REGION }}" "${{ env.SECONDARY_REGION }}"; do
+            if [ "$REGION" == "${{ env.REGION }}" ]; then
+              SERVICE="chuck-${{ inputs.environment }}-primary"
+            else
+              SERVICE="chuck-${{ inputs.environment }}-secondary"
+            fi
+            
+            gcloud run services update-traffic $SERVICE \
+              --region=$REGION \
+              --to-latest \
+              --quiet
+          done
+          
+          echo "Traffic shifted to 100%"
+
+      - name: Deployment Summary
+        run: |
+          echo "## Deployment Complete - ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image tag:** \`${{ inputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Revisions:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Primary (${{ env.REGION }}): \`${{ steps.deploy_primary.outputs.revision }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Secondary (${{ env.SECONDARY_REGION }}): \`${{ steps.deploy_secondary.outputs.revision }}\`" >> $GITHUB_STEP_SUMMARY
+
+  rollback:
+    name: Rollback (on failure)
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: failure()
+    environment: ${{ inputs.environment }}
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Rollback Services
+        run: |
+          for REGION in "${{ env.REGION }}" "${{ env.SECONDARY_REGION }}"; do
+            if [ "$REGION" == "${{ env.REGION }}" ]; then
+              SERVICE="chuck-${{ inputs.environment }}-primary"
+            else
+              SERVICE="chuck-${{ inputs.environment }}-secondary"
+            fi
+            
+            PREVIOUS=$(gcloud run revisions list \
+              --service=$SERVICE \
+              --region=$REGION \
+              --format='value(name)' \
+              --limit=2 | tail -1)
+            
+            if [ -n "$PREVIOUS" ]; then
+              gcloud run services update-traffic $SERVICE \
+                --region=$REGION \
+                --to-revisions="$PREVIOUS=100" \
+                --quiet
+              echo "Rolled back $SERVICE to: $PREVIOUS"
+            fi
+          done

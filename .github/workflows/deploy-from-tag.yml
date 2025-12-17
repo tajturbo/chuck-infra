@@ -1,0 +1,61 @@
+# Deploy from Tag Workflow
+# Deploys a specific release tag to staging or production
+# Use this for promoting releases from stg → prod
+
+name: Deploy from Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to deploy (e.g., v1.0.0)"
+        required: true
+        type: string
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - stg
+          - prod
+
+jobs:
+  validate:
+    name: Validate Tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+      image_tag: ${{ steps.parse.outputs.image_tag }}
+
+    steps:
+      - name: Parse and validate tag
+        id: parse
+        run: |
+          TAG="${{ inputs.tag }}"
+          
+          # Remove 'v' prefix if present
+          VERSION="${TAG#v}"
+          
+          # Validate semver format
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "Error: Invalid version format. Expected semver (e.g., 1.0.0 or v1.0.0)"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "image_tag=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION to ${{ inputs.environment }}"
+
+      - name: Verify tag exists
+        run: |
+          git ls-remote --tags origin | grep -q "refs/tags/${{ inputs.tag }}" || \
+            (echo "Error: Tag ${{ inputs.tag }} not found" && exit 1)
+
+  deploy:
+    name: Deploy ${{ inputs.tag }} to ${{ inputs.environment }}
+    needs: validate
+    uses: ./.github/workflows/app-deploy.yml
+    with:
+      environment: ${{ inputs.environment }}
+      image_tag: ${{ needs.validate.outputs.image_tag }}
+    secrets: inherit

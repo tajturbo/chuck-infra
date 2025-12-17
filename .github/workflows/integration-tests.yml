@@ -1,0 +1,154 @@
+# Integration Tests Workflow
+# Validates deployed endpoints are working correctly
+
+name: Integration Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        type: string
+    secrets:
+      GCP_WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+      GCP_SERVICE_ACCOUNT:
+        required: true
+      GCP_PROJECT_ID:
+        required: true
+
+env:
+  REGION: us-central1
+  SECONDARY_REGION: us-east1
+
+jobs:
+  integration-tests:
+    name: Test ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Get Service URLs
+        id: urls
+        run: |
+          PRIMARY_URL=$(gcloud run services describe chuck-${{ inputs.environment }}-primary \
+            --region=${{ env.REGION }} \
+            --format='value(status.url)')
+          
+          SECONDARY_URL=$(gcloud run services describe chuck-${{ inputs.environment }}-secondary \
+            --region=${{ env.SECONDARY_REGION }} \
+            --format='value(status.url)')
+          
+          echo "primary_url=$PRIMARY_URL" >> $GITHUB_OUTPUT
+          echo "secondary_url=$SECONDARY_URL" >> $GITHUB_OUTPUT
+          
+          echo "Primary URL: $PRIMARY_URL"
+          echo "Secondary URL: $SECONDARY_URL"
+
+      - name: Test Primary - Health Endpoint
+        run: |
+          RESPONSE=$(curl -sf "${{ steps.urls.outputs.primary_url }}/health")
+          echo "$RESPONSE" | jq .
+          
+          STATUS=$(echo "$RESPONSE" | jq -r '.status')
+          if [ "$STATUS" != "healthy" ]; then
+            echo "Primary health check failed: $STATUS"
+            exit 1
+          fi
+          echo "✅ Primary health check passed"
+
+      - name: Test Secondary - Health Endpoint
+        run: |
+          RESPONSE=$(curl -sf "${{ steps.urls.outputs.secondary_url }}/health")
+          echo "$RESPONSE" | jq .
+          
+          STATUS=$(echo "$RESPONSE" | jq -r '.status')
+          if [ "$STATUS" != "healthy" ]; then
+            echo "Secondary health check failed: $STATUS"
+            exit 1
+          fi
+          echo "✅ Secondary health check passed"
+
+      - name: Test Primary - Main Page
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.urls.outputs.primary_url }}/")
+          if [ "$STATUS" != "200" ]; then
+            echo "Primary main page returned $STATUS"
+            exit 1
+          fi
+          
+          # Check for Chuck Norris content
+          BODY=$(curl -s "${{ steps.urls.outputs.primary_url }}/")
+          if ! echo "$BODY" | grep -qi "chuck"; then
+            echo "Main page doesn't contain Chuck Norris content"
+            exit 1
+          fi
+          echo "✅ Primary main page OK"
+
+      - name: Test Primary - API Endpoint
+        run: |
+          RESPONSE=$(curl -sf "${{ steps.urls.outputs.primary_url }}/api/joke")
+          echo "$RESPONSE" | jq .
+          
+          JOKE=$(echo "$RESPONSE" | jq -r '.joke')
+          if [ -z "$JOKE" ] || [ "$JOKE" == "null" ]; then
+            echo "API joke endpoint failed"
+            exit 1
+          fi
+          echo "✅ API endpoint returned joke: $JOKE"
+
+      - name: Test Response Times
+        run: |
+          echo "Testing response times..."
+          
+          PRIMARY_TIME=$(curl -s -o /dev/null -w "%{time_total}" "${{ steps.urls.outputs.primary_url }}/health")
+          SECONDARY_TIME=$(curl -s -o /dev/null -w "%{time_total}" "${{ steps.urls.outputs.secondary_url }}/health")
+          
+          echo "Primary response time: ${PRIMARY_TIME}s"
+          echo "Secondary response time: ${SECONDARY_TIME}s"
+          
+          # Check if response time is under 2 seconds
+          if (( $(echo "$PRIMARY_TIME > 2" | bc -l) )); then
+            echo "⚠️ Primary response time is slow: ${PRIMARY_TIME}s"
+          else
+            echo "✅ Primary response time OK"
+          fi
+
+      - name: Test Summary
+        run: |
+          echo "## Integration Tests - ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Primary Health | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secondary Health | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Main Page | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Endpoint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Primary URL:** ${{ steps.urls.outputs.primary_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Secondary URL:** ${{ steps.urls.outputs.secondary_url }}" >> $GITHUB_STEP_SUMMARY
