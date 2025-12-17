@@ -122,7 +122,7 @@ Add these secrets to your GitHub repository:
 | `GCP_PROJECT_ID` | Your GCP project ID |
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | The `$WIP` value from step 2 |
 | `GCP_SERVICE_ACCOUNT` | `chuck-deployer@${PROJECT_ID}.iam.gserviceaccount.com` |
-| `TF_STATE_BUCKET` | `${PROJECT_ID}-tfstate` |
+| `TF_STATE_BUCKET` | `${PROJECT_ID}-tfstate` (Just the name, **NO** `gs://` prefix) |
 
 ## 4. Initial Deployment
 
