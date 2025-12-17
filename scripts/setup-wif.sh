@@ -43,7 +43,22 @@ gcloud iam workload-identity-pools providers update-oidc "$PROVIDER_NAME" \
     --workload-identity-pool="$POOL_NAME" \
     --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository"
 
-# 4. Output Configuration for GitHub Secrets
+    --workload-identity-pool="$POOL_NAME" \
+    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository"
+
+# 4. Bind Service Account to Workload Identity Pool
+echo "Binding Service Account to Pool (step 3/3)..."
+SERVICE_ACCOUNT="chuck-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+POOL_ID="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_NAME}"
+MEMBER="principalSet://iam.googleapis.com/${POOL_ID}/attribute.repository/${REPO_OWNER}/chuck-infra"
+
+gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT" \
+    --project="$PROJECT_ID" \
+    --role="roles/iam.workloadIdentityUser" \
+    --member="$MEMBER"
+
+# 5. Output Configuration for GitHub Secrets
 echo "==================================================="
 echo "Setup Complete!"
 echo "Put this value in your GitHub Secret GCP_WORKLOAD_IDENTITY_PROVIDER:"
