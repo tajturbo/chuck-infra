@@ -60,6 +60,16 @@ done
 
 Set up keyless authentication from GitHub Actions.
 
+### Recommended: Use Helper Script
+We have provided a helper script that handles the setup automatically:
+
+```bash
+./scripts/setup-wif.sh
+```
+
+### Manual Setup
+If you prefer to run commands manually, use these updated commands which include the required repository owner constraint:
+
 ```bash
 # Create Workload Identity Pool
 gcloud iam workload-identity-pools create "github-pool" \
@@ -67,14 +77,22 @@ gcloud iam workload-identity-pools create "github-pool" \
   --location="global" \
   --display-name="GitHub Actions Pool"
 
-# Create Provider
+# Create Provider (with repo owner constraint to pass validation)
 gcloud iam workload-identity-pools providers create-oidc "github-provider" \
   --project="${PROJECT_ID}" \
   --location="global" \
   --workload-identity-pool="github-pool" \
   --display-name="GitHub Provider" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
-  --issuer-uri="https://token.actions.githubusercontent.com"
+  --issuer-uri="https://token.actions.githubusercontent.com" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+  --attribute-condition="assertion.repository_owner=='fromthehell666'"
+
+# Update Attribute Mapping (optional cleanup)
+gcloud iam workload-identity-pools providers update-oidc "github-provider" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --workload-identity-pool="github-pool" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository"
 
 # Get the Workload Identity Provider resource name
 export WIP=$(gcloud iam workload-identity-pools providers describe github-provider \
@@ -86,7 +104,7 @@ export WIP=$(gcloud iam workload-identity-pools providers describe github-provid
 echo "Workload Identity Provider: $WIP"
 
 # Allow your repo to impersonate the service account
-export REPO="your-github-username/chuck-infra"
+export REPO="fromthehell666/chuck-infra"
 
 gcloud iam service-accounts add-iam-policy-binding "${SA_EMAIL}" \
   --project="${PROJECT_ID}" \
