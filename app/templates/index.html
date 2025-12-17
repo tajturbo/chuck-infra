@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuck Norris Jokes</title>
+    <meta name="description" content="Get random Chuck Norris jokes - the most legendary facts about the most legendary man.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --accent-orange: #ff6b35;
+            --accent-yellow: #ffc857;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --glow-orange: rgba(255, 107, 53, 0.4);
+            --glow-yellow: rgba(255, 200, 87, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background-image: 
+                radial-gradient(ellipse at 20% 80%, rgba(255, 107, 53, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(255, 200, 87, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(20, 20, 35, 1) 0%, var(--bg-dark) 100%);
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            margin-bottom: 1rem;
+        }
+
+        .logo img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 0 30px var(--glow-orange);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 30px var(--glow-orange); }
+            50% { box-shadow: 0 0 50px var(--glow-yellow); }
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', Impact, sans-serif;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-yellow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 40px var(--glow-orange);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .joke-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 4px 30px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .joke-card::before {
+            content: '"';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 6rem;
+            font-family: Georgia, serif;
+            color: rgba(255, 107, 53, 0.1);
+            line-height: 1;
+        }
+
+        .joke-text {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            line-height: 1.7;
+            color: var(--text-primary);
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, var(--accent-orange) 0%, #ff8c5a 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px var(--glow-orange);
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px var(--glow-orange);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover svg {
+            transform: rotate(180deg);
+        }
+
+        .btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .btn.loading svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            margin-top: 3rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent-orange);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: var(--accent-yellow);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-yellow);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        @media (max-width: 480px) {
+            .joke-card {
+                padding: 1.5rem;
+            }
+            
+            .stats {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            {% if icon_url %}
+            <img src="{{ icon_url }}" alt="Chuck Norris" id="chuck-icon">
+            {% else %}
+            <img src="https://api.chucknorris.io/img/avatar/chuck-norris.png" alt="Chuck Norris" id="chuck-icon">
+            {% endif %}
+        </div>
+        
+        <h1>CHUCK NORRIS JOKES</h1>
+        <p class="subtitle">The most legendary facts about the most legendary man</p>
+        
+        <div class="joke-card">
+            <p class="joke-text" id="joke-text">{{ joke }}</p>
+        </div>
+        
+        <button class="btn" id="new-joke-btn" onclick="getNewJoke()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Get New Joke
+        </button>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="jokes-count">1</div>
+                <div class="stat-label">Jokes Read</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">∞</div>
+                <div class="stat-label">Chuck's Power</div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            Powered by <a href="https://api.chucknorris.io/" target="_blank" rel="noopener">Chuck Norris API</a>
+        </footer>
+    </div>
+
+    <script>
+        let jokesCount = 1;
+
+        async function getNewJoke() {
+            const btn = document.getElementById('new-joke-btn');
+            const jokeText = document.getElementById('joke-text');
+            
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/joke');
+                const data = await response.json();
+                
+                jokeText.style.opacity = '0';
+                
+                setTimeout(() => {
+                    jokeText.textContent = data.joke;
+                    jokeText.style.opacity = '1';
+                    jokesCount++;
+                    document.getElementById('jokes-count').textContent = jokesCount;
+                }, 200);
+                
+            } catch (error) {
+                jokeText.textContent = "Chuck Norris doesn't fail. But the network did.";
+            } finally {
+                setTimeout(() => btn.classList.remove('loading'), 500);
+            }
+        }
+
+        // Smooth transition for joke text
+        document.getElementById('joke-text').style.transition = 'opacity 0.2s ease';
+    </script>
+</body>
+</html>
