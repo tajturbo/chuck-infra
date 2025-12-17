@@ -54,6 +54,17 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Debug Bucket Access
+        run: |
+          echo "Debugging Bucket Access..."
+          gcloud storage buckets describe gs://${{ secrets.TF_STATE_BUCKET }}
+          echo "Bucket access confirmed."
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
