@@ -163,10 +163,15 @@ jobs:
           echo "**Version:** \`${{ steps.vars.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+
   infra-plan:
     name: Infrastructure Plan
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
     uses: ./.github/workflows/infra-provision.yml
     with:
       environment: dev
