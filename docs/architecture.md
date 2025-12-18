@@ -39,10 +39,8 @@ graph TB
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| Web Server | Nginx | Reverse proxy, SSL termination, compression |
-| App Server | Gunicorn | WSGI server for Python |
+| App Server | Gunicorn | WSGI HTTP server for Python |
 | Framework | Flask | Web framework |
-| Process Manager | Supervisor | Manages Nginx + Gunicorn |
 
 ### Infrastructure Layer
 
@@ -50,7 +48,7 @@ graph TB
 |-----------|-------------|---------|
 | Container Registry | Artifact Registry | Docker image storage |
 | Compute | Cloud Run | Serverless containers |
-| Load Balancing | Global HTTP(S) LB | Traffic distribution |
+| Load Balancing | Global HTTP(S) LB | Traffic distribution, SSL termination, HTTP→HTTPS redirect, compression |
 | DNS | Cloud DNS (optional) | Domain management |
 
 ## Deployment Strategy
