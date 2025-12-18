@@ -148,7 +148,9 @@ jobs:
 
       - name: Update Terraform Image Tag
         id: update-tag
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: |
+          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'workflow_dispatch' && steps.vars.outputs.environment == 'dev')
         run: |
           echo 'image_tag = "${{ steps.vars.outputs.image_tag }}"' > infra/terraform.tfvars
           git config --global user.name 'github-actions[bot]'
@@ -167,10 +169,12 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
 
-  infra-dev-deploy:
+  infra-deploy:
     name: Infrastructure Deploy
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch')
     permissions:
       contents: read
       id-token: write
