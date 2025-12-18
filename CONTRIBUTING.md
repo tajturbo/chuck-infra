@@ -57,25 +57,45 @@ git commit -m "chore(infra): update Cloud Run memory limits"
 git commit -m "feat(api)!: change joke response format"
 ```
 
+## Pull Request Validation
+
+To ensure stability, every Pull Request targeting the `main` branch undergoes automated validation:
+
+- **Application code (`/app`)**: Triggers a Docker build and unit tests. No image is pushed.
+- **Infrastructure code (`/infra`)**: Triggers a `terraform plan` for the `dev` environment to verify changes.
+
+PRs must pass these checks before they can be merged.
+
 ## Release Workflow
+
+The project supports two primary development flows:
+
+### 1. Feature Branch / PR Flow (Recommended)
+Use this for non-trivial changes or when peer review is required.
 
 ```mermaid
 graph TD
-    A[Commit to /app] -->|automated| B[Tests & Image Build]
-    B -->|automated| C[Push to Registry]
-    C -->|automated| D[Update infra/terraform.tfvars]
-    D -->|manual| E[Terraform Plan - dev]
-    E -->|manual| F[Terraform Apply - dev]
-    F -->|automated| G[Integration Tests]
-    G -->|manual| H[Merge Release-Please PR]
-    H -->|automated| I[Create v* Tag]
-    I -->|manual| J[Deploy to stg/prod with release tag]
+    A[Feature Branch] -->|PR| B[Validation: Build/Test/Plan]
+    B -->|Merge| C[main]
+    C -->|automated| D[Dev Plan]
+    D -->|manual| E[Dev Apply]
 ```
 
-For detailed information on environment triggers, mode of operation, and naming conventions, please refer to the **[Environments & Conventions](docs/architecture.md#environments--conventions)** section in the architecture documentation.
+### 2. Direct Push Flow
+Use this for quick fixes or direct small updates to the development environment.
+
+```mermaid
+graph TD
+    A[Direct Push] -->|Push| B[main]
+    B -->|automated| C[Dev Plan]
+    C -->|manual| D[Dev Apply]
+```
+
+---
 
 ## Branch Strategy
 
-- `main` - Development branch, auto-deploys to dev
-- Feature branches - Create PRs to main
-- No direct commits to main (use PRs)
+- **`main`**: Development branch. Direct pushes are allowed, but PRs are encouraged for complex changes.
+- **Feature branches**: Use for isolated development. Create PRs targeting `main`.
+
+For detailed information on environment triggers, mode of operation, and naming conventions, please refer to the **[Environments & Conventions](docs/architecture.md#environments--conventions)** section in the architecture documentation.

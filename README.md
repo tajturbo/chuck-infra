@@ -42,8 +42,7 @@ docker run -p 8080:8000 chuck-app
 ├── infra/                  # Terraform infrastructure
 │   ├── main.tf, variables.tf, resources.tf, outputs.tf
 │   ├── modules/cloud-run/  # Cloud Run service
-│   ├── modules/load-balancer/
-│   └── registry/           # Global Docker registry
+│   └── modules/load-balancer/
 ├── .github/workflows/      # CI/CD pipelines
 │   ├── docker-build.yml    # Build, push, and update image tag
 │   ├── release-please.yml  # Automatic versioning
