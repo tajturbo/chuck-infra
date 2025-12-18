@@ -72,6 +72,21 @@ resource "google_compute_url_map" "default" {
   project         = var.project_id
   name            = "${var.name}-url-map"
   default_service = google_compute_backend_service.default.id
+
+  host_rule {
+    hosts        = ["*"]
+    path_matcher = "all-paths"
+  }
+
+  path_matcher {
+    name            = "all-paths"
+    default_service = google_compute_backend_service.default.id
+
+    path_rule {
+      paths   = ["/*"]
+      service = google_compute_backend_service.default.id
+    }
+  }
 }
 
 # Managed SSL certificate (using nip.io for easy setup)
