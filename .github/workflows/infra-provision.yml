@@ -2,7 +2,7 @@
 # Deploys Terraform infrastructure for dev/stg/prod environments
 
 name: Infrastructure Provision
-run-name: "Terraform ${{ github.event_name == 'workflow_dispatch' && format('{0} on {1}', inputs.action, inputs.environment) || 'plan on dev' }} (${{ github.ref_name }})"
+run-name: "Terraform ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') && format('{0} on {1}', inputs.action, inputs.environment) || format('apply on {0}', github.ref_name) }} (${{ github.ref_name }})"
 
 on:
   push:
@@ -90,11 +90,16 @@ jobs:
       - name: Setup Workflow Variables
         id: vars
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
             echo "ACTION=plan" >> $GITHUB_ENV
             echo "ENV=dev" >> $GITHUB_OUTPUT
             echo "ACTION=plan" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "ENV=dev" >> $GITHUB_ENV
+            echo "ACTION=apply" >> $GITHUB_ENV
+            echo "ENV=dev" >> $GITHUB_OUTPUT
+            echo "ACTION=apply" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "workflow_call" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "ENV=${{ inputs.environment }}" >> $GITHUB_ENV
             echo "ACTION=${{ inputs.action }}" >> $GITHUB_ENV
@@ -129,7 +134,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
-          terraform plan \
+          terraform plan \iq
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="environment=${{ env.ENV }}" \
             -var="region=${{ env.REGION }}" \
