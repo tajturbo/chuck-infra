@@ -5,7 +5,7 @@ set -e
 POOL_NAME="github-pool"
 PROVIDER_NAME="github-provider"
 PROJECT_ID=$(gcloud config get-value project)
-REPO_OWNER="fromthehell666"
+REPO_OWNER="tajturbo"
 
 echo "Setting up Workload Identity Federation for project: $PROJECT_ID"
 
