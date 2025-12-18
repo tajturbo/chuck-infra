@@ -164,8 +164,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
 
-  infra-plan:
-    name: Infrastructure Plan
+  infra-dev-deploy:
+    name: Infrastructure Deploy (Dev)
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -175,7 +175,7 @@ jobs:
     uses: ./.github/workflows/infra-provision.yml
     with:
       environment: dev
-      action: plan
+      action: apply
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}

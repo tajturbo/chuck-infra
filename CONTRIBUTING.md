@@ -77,8 +77,8 @@ Use this for non-trivial changes or when peer review is required.
 graph TD
     A[Feature Branch] -->|PR| B[Validation: Build/Test/Plan]
     B -->|Merge| C[main]
-    C -->|automated| D[Dev Plan]
-    D -->|manual| E[Dev Apply]
+    C -->|automated| D[Dev Deploy - Apply]
+    D -->|automated| E[Integration Tests]
 ```
 
 ### 2. Direct Push Flow
@@ -87,8 +87,8 @@ Use this for quick fixes or direct small updates to the development environment.
 ```mermaid
 graph TD
     A[Direct Push] -->|Push| B[main]
-    B -->|automated| C[Dev Plan]
-    C -->|manual| D[Dev Apply]
+    B -->|automated| C[Dev Deploy - Apply]
+    C -->|automated| D[Integration Tests]
 ```
 
 ---
