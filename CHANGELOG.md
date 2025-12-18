@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.2](https://github.com/tajturbo/chuck-infra/compare/v0.1.1...v0.1.2) (2025-12-18)
+
+
+### Bug Fixes
+
+* resolve typo in terraform plan command ([df0085a](https://github.com/tajturbo/chuck-infra/commit/df0085a65b8ebd42990e183fe0df95d01ffb51f0))
+
+
+### Documentation
+
+* add CI/CD status badges and environments table to README ([def5fda](https://github.com/tajturbo/chuck-infra/commit/def5fda5f13c67ecf121f440a5cdc4105915433c))
+* finalize release process and remove obsolete files ([1645200](https://github.com/tajturbo/chuck-infra/commit/1645200f0e2c7a4515a32baba5de0b93f0e58efb))
+* refine release process and deduplicate documentation ([a652d76](https://github.com/tajturbo/chuck-infra/commit/a652d764ec7621a4d1886f0e35fdb232bb8167d9))
+* refine release process and deduplicate documentation ([916ed7f](https://github.com/tajturbo/chuck-infra/commit/916ed7fb623b06cd89e339e577917b3afefec495))
+* restructure guides into initial setup and continuous deployment ([a08d18a](https://github.com/tajturbo/chuck-infra/commit/a08d18a122922adc1cfd015ecf342a6a88bda083))
+* update development workflows and contributing guide ([e197938](https://github.com/tajturbo/chuck-infra/commit/e197938a7a9507f16d24a27470ba5b72795afe6b))
+* update environment URLs in README with live endpoints ([48799b1](https://github.com/tajturbo/chuck-infra/commit/48799b127b6d8cd0c3f9a1de87969d2f65949078))
+
 ## [0.1.1](https://github.com/tajturbo/chuck-infra/compare/v0.1.0...v0.1.1) (2025-12-18)
 
 
