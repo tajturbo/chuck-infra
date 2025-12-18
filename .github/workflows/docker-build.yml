@@ -80,6 +80,7 @@ jobs:
       image_tag: ${{ steps.vars.outputs.image_tag }}
       environment: ${{ steps.vars.outputs.environment }}
       version: ${{ steps.vars.outputs.version }}
+      new_sha: ${{ steps.update-tag.outputs.new_sha }}
 
     steps:
       - name: Checkout code
@@ -146,6 +147,7 @@ jobs:
           docker push ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Update Terraform Image Tag
+        id: update-tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo 'image_tag = "${{ steps.vars.outputs.image_tag }}"' > infra/terraform.tfvars
@@ -154,6 +156,7 @@ jobs:
           git add infra/terraform.tfvars
           git commit -m "chore: update image tag to ${{ steps.vars.outputs.image_tag }}"
           git push
+          echo "new_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
       - name: Output image info
         run: |
@@ -165,7 +168,7 @@ jobs:
           echo "**Image:** \`${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
 
   infra-dev-deploy:
-    name: Infrastructure Deploy (Dev)
+    name: Infrastructure Deploy
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -174,8 +177,9 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/infra-provision.yml
     with:
-      environment: dev
+      environment: ${{ needs.build.outputs.environment }}
       action: apply
+      ref: ${{ needs.build.outputs.new_sha || github.sha }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
