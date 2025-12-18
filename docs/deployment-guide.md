@@ -2,26 +2,28 @@
 
 Complete guide for deploying the Chuck Norris Jokes application to GCP.
 
-## Prerequisites
+## 1. Prerequisites
 
-- GCP project with billing enabled
-- `gcloud` CLI installed
-### 2. Infrastructure Prerequisites
-You will need:
+Before starting, ensure you have:
 1.  A **GCP Project** with billing enabled.
-2.  A **GCS Bucket** for Terraform state.
-3.  An **Artifact Registry** repository (Docker format).
+2.  The **`gcloud` CLI** installed and authenticated.
+3.  A **GCS Bucket** for Terraform state.
+4.  An **Artifact Registry** repository (Docker format) named `chuck-registry`.
 
-Run these commands to set them up:
+### Resource Setup
+
+Run these commands to set up the foundation:
+
 ```bash
 # Set your project ID
 export PROJECT_ID="your-project-id"
 export REGION="us-central1"
 
-# Create State Bucket
-gcloud storage buckets create gs://${PROJECT_ID}-tfstate --location=${REGION}
+# Create State Bucket (enable versioning for safety)
+gsutil mb -p $PROJECT_ID -l ${REGION} gs://${PROJECT_ID}-tfstate
+gsutil versioning set on gs://${PROJECT_ID}-tfstate
 
-# Create Artifact Registry (Manual Step)
+# Create Artifact Registry
 gcloud artifacts repositories create chuck-registry \
     --repository-format=docker \
     --location=${REGION} \
@@ -29,12 +31,6 @@ gcloud artifacts repositories create chuck-registry \
 ```
 
 
-### Create Terraform State Bucket
-
-```bash
-gsutil mb -p $PROJECT_ID -l us-central1 gs://${PROJECT_ID}-tfstate
-gsutil versioning set on gs://${PROJECT_ID}-tfstate
-```
 
 ### Create Service Account
 
@@ -154,32 +150,37 @@ Run `infra-provision` workflow:
 
 Repeat for `stg` and `prod` as needed.
 
-### Step 3: Deploy Application
+### Step 3: Deployment lifecycle
 
-Run `app-deploy` workflow or let it auto-trigger after build.
+1.  **Commit Changes**: Push your application code changes to the `/app` directory on the `main` branch.
+2.  **Continuous Integration**: The `Build and Push Docker Image` workflow triggers automatically. It runs unit tests and, if successful, builds and pushes a new image to Artifact Registry.
+3.  **GitOps Update**: Upon completion, the build workflow automatically updates `infra/terraform.tfvars` with the new image tag.
+4.  **Automated Planning**: The update to `infra/terraform.tfvars` triggers the `Infrastructure Provision` workflow to perform a Terraform `plan` for the `dev` environment.
+5.  **Manual Deployment**: A developer must manually trigger the `Infrastructure Provision` workflow with `action: apply` and `environment: dev` from the `main` branch to deploy the changes.
+6.  **Automated Validation**: Once the deployment is complete, integration tests trigger automatically against the Load Balancer URL.
+7.  **Release Creation**: If the `dev` deployment is successful and tests pass, merge the `release-please` PR. This creates a versioned release tag (e.g., `v1.2.3`).
+8.  **Promotion**: Versioned tags can then be deployed to `stg` and `prod` environments via manual trigger of the `Infrastructure Provision` workflow.
 
-## 5. Zero-Downtime Deployment Process
+## 5. Summary Deployment Lifecycle
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  1. Build new Docker image                                   │
-│     ↓                                                        │
-│  2. Push to Artifact Registry                                │
-│     ↓                                                        │
-│  3. Deploy new Cloud Run revision (0% traffic)               │
-│     ↓                                                        │
-│  4. Run integration tests on canary                          │
-│     ↓                                                        │
-│  5. Shift traffic to 50%                                     │
-│     ↓                                                        │
-│  6. Monitor health                                           │
-│     ↓                                                        │
-│  7. Shift traffic to 100%                                    │
-│     ↓                                                        │
-│  ✓ Deployment complete                                       │
-│                                                              │
-│  ✗ On failure: Auto-rollback to previous revision           │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  1. Commit to /app → Build & Push (Auto)                         │
+│     ↓                                                            │
+│  2. Update image_tag in terraform.tfvars (Auto)                  │
+│     ↓                                                            │
+│  3. Terraform Plan for dev (Auto)                                │
+│     ↓                                                            │
+│  4. Terraform Apply for dev (MANUAL)                             │
+│     ↓                                                            │
+│  5. Integration tests run against Load Balancer (Auto)           │
+│     ↓                                                            │
+│  6. Merge release-please PR → Create version tag (MANUAL)        │
+│     ↓                                                            │
+│  7. Manual Deploy tag to STG → PROD (MANUAL)                     │
+│     ↓                                                            │
+│  ✓ Release complete                                              │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ## 6. Manual Rollback

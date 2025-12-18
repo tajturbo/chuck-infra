@@ -59,42 +59,20 @@ git commit -m "feat(api)!: change joke response format"
 
 ## Release Workflow
 
-```
-┌─────────────────┐
-│  Developer      │
-│  commits        │
-└────────┬────────┘
-         │ conventional commits (push to main)
-         ▼
-┌─────────────────┐
-│  main branch    │──────► Auto-tag & GitOps Commit ──► Auto-deploy to DEV
-└────────┬────────┘
-         │ release-please creates PR
-         ▼
-┌─────────────────┐
-│  Release PR     │  (auto-generated changelog)
-│  merged         │
-└────────┬────────┘
-         │ creates tag (e.g., v1.2.0)
-         ▼
-┌─────────────────┐
-│  Tag created    │──────► Deploy to STG
-└────────┬────────┘
-         │ manual promotion
-         ▼
-┌─────────────────┐
-│  Deploy from    │──────► Deploy to PROD
-│  Tag workflow   │
-└─────────────────┘
+```mermaid
+graph TD
+    A[Commit to /app] -->|automated| B[Tests & Image Build]
+    B -->|automated| C[Push to Registry]
+    C -->|automated| D[Update infra/terraform.tfvars]
+    D -->|automated| E[Terraform Plan - dev]
+    E -->|manual| F[Terraform Apply - dev]
+    F -->|automated| G[Integration Tests]
+    G -->|manual| H[Merge Release-Please PR]
+    H -->|automated| I[Create v* Tag]
+    I -->|manual| J[Deploy to stg/prod]
 ```
 
-## Environments
-
-| Environment | Trigger | Deployment |
-|-------------|---------|------------|
-| **dev** | Push to `main` | Automatic |
-| **stg** | Tag created | Automatic |
-| **prod** | Manual (Deploy from Tag) | Manual approval |
+For detailed information on environment triggers, mode of operation, and naming conventions, please refer to the **[Environments & Conventions](docs/architecture.md#environments--conventions)** section in the architecture documentation.
 
 ## Branch Strategy
 

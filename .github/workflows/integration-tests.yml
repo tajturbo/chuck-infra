@@ -128,9 +128,9 @@ jobs:
           fi
           echo "✅ Load Balancer main page OK"
 
-      - name: Test Primary - API Endpoint
+      - name: Test Load Balancer - API Endpoint
         run: |
-          RESPONSE=$(curl -sf "${{ steps.urls.outputs.primary_url }}/api/joke")
+          RESPONSE=$(curl -sf -k "${{ steps.urls.outputs.lb_url }}/api/joke")
           echo "$RESPONSE" | jq .
           
           JOKE=$(echo "$RESPONSE" | jq -r '.joke')

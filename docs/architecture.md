@@ -53,42 +53,31 @@ graph TB
 | Load Balancing | Global HTTP(S) LB | Traffic distribution |
 | DNS | Cloud DNS (optional) | Domain management |
 
-### CI/CD Layer
+## Deployment Strategy
 
-| Workflow | Trigger | Actions |
-|----------|---------|---------|
-| docker-build | Push to main | Test → Build → Push |
-| infra-provision | Manual | Terraform plan/apply/destroy |
-| app-deploy | After build | Zero-downtime deploy |
-| integration-tests | Manual/Called | Validate deployment |
+The project leverages a **Semi-Automated GitOps** model to ensure high availability and operational control across multiple regions.
 
-## Deployment Strategies
+For a detailed step-by-step breakdown of the deployment lifecycle, please refer to the **[Deployment Guide](deployment-guide.md)**. For information on the CI/CD pipeline and release workflow, see **[CONTRIBUTING.md](../CONTRIBUTING.md)**.
 
-### Zero-Downtime Deployment (Canary)
-
-The deployment workflow uses Cloud Run revisions for safe, gradual traffic shifting:
-
-1.  **Deployment**: A new revision is deployed with 0% traffic.
-2.  **Validation**: Integration tests are run against the unique URL of the new revision (canary).
-3.  **Traffic Shift**: 
-    - Shift 50% traffic if tests pass.
-    - Monitor health and latency.
-    - Shift 100% traffic if stable.
-4.  **Automatic Rollback**: If any stage fails (tests or health check), traffic is reverted to the previous stable revision.
+### Key Principles
+- **Revision-based**: Uses Cloud Run's native revision management for safe, split-free traffic shifting.
+- **GitOps Driven**: `infra/terraform.tfvars` acts as the source of truth for the active container version.
+- **Multi-Region Redundancy**: Traffic is load-balanced across primary and secondary regions.
+- **Automated Validation**: Integrated health checks and integration tests run automatically post-deployment.
 
 Manual rollback via:
-- GitHub Actions workflow
-- `gcloud run services update-traffic`
+- Update `image_tag` in `infra/terraform.tfvars` to a previous version.
+- `gcloud run services update-traffic` command.
 
-## Resource Naming Convention
+## Environments & Conventions
 
-All resources follow the pattern: `chuck-{environment}`
+All resources follow the pattern: `chuck-{environment}`.
 
-| Environment | Example Resources |
-|-------------|-------------------|
-| dev | chuck-dev-primary, chuck-dev-secondary |
-| stg | chuck-stg-primary, chuck-stg-secondary |
-| prod | chuck-prod-primary, chuck-prod-secondary |
+| Environment | Trigger | Deployment Mode | Example Resources |
+|-------------|---------|-----------------|-------------------|
+| **dev** | Push to `main` | Manual Apply | `chuck-dev-primary` |
+| **stg** | Tag created (`v*`) | Manual Apply | `chuck-stg-primary` |
+| **prod** | Release Promotion | Manual Apply | `chuck-prod-primary` |
 
 Shared resources:
 - `chuck-registry` (Artifact Registry, shared across all envs)

@@ -45,27 +45,31 @@ docker run -p 8080:8000 chuck-app
 │   ├── modules/load-balancer/
 │   └── registry/           # Global Docker registry
 ├── .github/workflows/      # CI/CD pipelines
-│   ├── docker-build.yml    # Build and push images
+│   ├── docker-build.yml    # Build, push, and update image tag
 │   ├── release-please.yml  # Automatic versioning
-│   ├── deploy-from-tag.yml # Deploy releases to stg/prod
-│   ├── app-deploy.yml      # Zero-downtime deployment
-│   └── infra-provision.yml # Terraform provisioning
+│   ├── integration-tests.yml # Automated LB-centric tests
+│   └── infra-provision.yml # Terraform provisioning (Dev/Stg/Prod)
 └── docs/                   # Documentation
 ```
 
 ## 🔄 Release Workflow
 
-This project uses **Conventional Commits** and **release-please** for automatic versioning. For a detailed breakdown of the release process and how to contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
+This project uses **Conventional Commits** and **release-please** for automatic versioning. The workflow follows these steps:
+1. **Automated Build**: Commits to `/app` trigger tests, builds, and automated tag updates in Terraform.
+2. **Manual Deployment**: Infrastructure updates (Dev/Stg/Prod) are triggered manually via GitHub Actions.
+3. **Automated Validation**: After deployment, integration tests run automatically against the Load Balancer.
+
+For a detailed breakdown, see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Deployment Guide](docs/deployment-guide.md).
 
 ## 🔧 Architecture
 
 The application uses a multi-region, high-availability architecture on GCP.
 
-- **Multi-region**: Deployed to 2 GCP regions for redundancy.
-- **Zero-downtime**: Canary deployments with gradual traffic shift.
-- **Auto-scaling**: 0 to N instances based on traffic.
+- **Multi-region**: Deployed to `us-central1` and `us-east1` for maximum redundancy.
+- **Zero-downtime**: Leverages Cloud Run's native revision management for safe deployments.
+- **Auto-scaling**: Scales from 0 to 10+ instances based on request concurrency.
 
-See [docs/architecture.md](docs/architecture.md) for detailed diagrams and component breakdowns.
+See [docs/architecture.md](docs/architecture.md) for detailed diagrams.
 
 ## 🔐 GCP Setup & Deployment
 
