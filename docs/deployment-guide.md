@@ -60,6 +60,18 @@ do
 done
 ```
 
+### Required Permissions Summary
+The Service Account needs the following roles:
+| Role | Purpose |
+|------|---------|
+| `roles/run.admin` | Manage Cloud Run services |
+| `roles/artifactregistry.admin` | Push images to Artifact Registry |
+| `roles/compute.admin` | Manage Load Balancer and Network groups |
+| `roles/iam.serviceAccountUser` | Act as the service account |
+| `roles/storage.admin` | Manage Terraform state in GCS |
+| `roles/iam.serviceAccountTokenCreator` | Required for WIF token exchange |
+
+
 ## 2. Workload Identity Federation
 
 Set up keyless authentication from GitHub Actions.

@@ -64,10 +64,10 @@ git commit -m "feat(api)!: change joke response format"
 │  Developer      │
 │  commits        │
 └────────┬────────┘
-         │ conventional commits
+         │ conventional commits (push to main)
          ▼
 ┌─────────────────┐
-│  main branch    │──────► Auto-deploy to DEV
+│  main branch    │──────► Auto-tag & GitOps Commit ──► Auto-deploy to DEV
 └────────┬────────┘
          │ release-please creates PR
          ▼

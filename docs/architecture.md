@@ -6,57 +6,32 @@ The Chuck Norris Jokes application is a Python Flask web application deployed to
 
 ## Architecture Diagram
 
+```mermaid
+graph TB
+    Internet([Internet]) --> LB[Global HTTPS Load Balancer]
+    
+    subgraph "GCP Infrastructure"
+        LB --> NEG1[Serverless NEG - us-central1]
+        LB --> NEG2[Serverless NEG - us-east1]
+        
+        NEG1 --> CR1[Cloud Run Primary]
+        NEG2 --> CR2[Cloud Run Secondary]
+        
+        CR1 --> AR[Artifact Registry]
+        CR2 --> AR
+    end
+    
+    subgraph "External"
+        CR1 -.-> API[Chuck Norris API]
+        CR2 -.-> API
+    end
+
+    style LB fill:#f9f,stroke:#333,stroke-width:2px
+    style AR fill:#bbf,stroke:#333
+    style CR1 fill:#dfd,stroke:#333
+    style CR2 fill:#dfd,stroke:#333
 ```
-                                    ┌─────────────────────┐
-                                    │     GitHub          │
-                                    │     Repository      │
-                                    └──────────┬──────────┘
-                                               │
-                              ┌────────────────┴────────────────┐
-                              │         GitHub Actions          │
-                              │  ┌──────────────────────────┐   │
-                              │  │ • Build & Test           │   │
-                              │  │ • Docker Push            │   │
-                              │  │ • Terraform Apply        │   │
-                              │  │ • Zero-downtime Deploy   │   │
-                              │  └──────────────────────────┘   │
-                              └────────────────┬────────────────┘
-                                               │
-                    ┌──────────────────────────┴──────────────────────────┐
-                    │                      GCP                            │
-                    │                                                     │
-                    │   ┌─────────────────────────────────────────────┐   │
-                    │   │           Artifact Registry                  │   │
-                    │   │           (chuck-registry)                   │   │
-                    │   │           Docker images shared               │   │
-                    │   │           across all environments            │   │
-                    │   └─────────────────────────────────────────────┘   │
-                    │                                                     │
-                    │   ┌─────────────────────────────────────────────┐   │
-                    │   │         Global HTTPS Load Balancer          │   │
-                    │   │         • Managed SSL certificate           │   │
-                    │   │         • HTTP → HTTPS redirect             │   │
-                    │   │         • Health checks                     │   │
-                    │   └───────────────────┬─────────────────────────┘   │
-                    │                       │                             │
-                    │           ┌───────────┴───────────┐                 │
-                    │           │                       │                 │
-                    │   ┌───────▼───────┐       ┌───────▼───────┐         │
-                    │   │  Cloud Run    │       │  Cloud Run    │         │
-                    │   │  us-central1  │       │  us-east1     │         │
-                    │   │               │       │               │         │
-                    │   │  chuck-{env}- │       │  chuck-{env}- │         │
-                    │   │  primary      │       │  secondary    │         │
-                    │   └───────────────┘       └───────────────┘         │
-                    │                                                     │
-                    └─────────────────────────────────────────────────────┘
-                                               │
-                                               ▼
-                                    ┌─────────────────────┐
-                                    │   Chuck Norris API  │
-                                    │ api.chucknorris.io  │
-                                    └─────────────────────┘
-```
+
 
 ## Components
 
@@ -89,23 +64,17 @@ The Chuck Norris Jokes application is a Python Flask web application deployed to
 
 ## Deployment Strategies
 
-### Zero-Downtime Deployment
+### Zero-Downtime Deployment (Canary)
 
-```
-Time    Traffic Distribution
-─────   ────────────────────────
-T+0     [████████████] 100% Old
-T+1     [████████████] 100% Old → Deploy new (0% traffic)
-T+2     [██████      ] 50% Old / 50% New
-T+3     [            ] 0% Old / 100% New
-```
+The deployment workflow uses Cloud Run revisions for safe, gradual traffic shifting:
 
-### Rollback Strategy
-
-Automatic rollback on:
-- Integration test failure
-- Health check failure
-- Deployment error
+1.  **Deployment**: A new revision is deployed with 0% traffic.
+2.  **Validation**: Integration tests are run against the unique URL of the new revision (canary).
+3.  **Traffic Shift**: 
+    - Shift 50% traffic if tests pass.
+    - Monitor health and latency.
+    - Shift 100% traffic if stable.
+4.  **Automatic Rollback**: If any stage fails (tests or health check), traffic is reverted to the previous stable revision.
 
 Manual rollback via:
 - GitHub Actions workflow

@@ -55,119 +55,35 @@ docker run -p 8080:8000 chuck-app
 
 ## 🔄 Release Workflow
 
-This project uses **Conventional Commits** and **release-please** for automatic versioning.
-
-```
-main branch ──► Auto-deploy to DEV
-     │
-     └──► release-please creates Release PR
-              │
-              └──► Merge PR → Creates tag (v1.0.0)
-                        │
-                        └──► Deploy to STG (automatic)
-                                  │
-                                  └──► Deploy to PROD (manual)
-```
+This project uses **Conventional Commits** and **release-please** for automatic versioning. For a detailed breakdown of the release process and how to contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 🔧 Architecture
 
-```
-┌─────────────────┐
-│   GitHub        │
-│   Actions       │
-└───────┬─────────┘
-        │ Deploy
-        ▼
-┌─────────────────┐     ┌─────────────────┐
-│ Artifact        │     │ Load Balancer   │
-│ Registry        │     │ (Global HTTPS)  │
-└───────┬─────────┘     └───────┬─────────┘
-        │                       │
-        └───────────┬───────────┘
-                    │
-        ┌───────────┴───────────┐
-        │                       │
-        ▼                       ▼
-┌─────────────────┐     ┌─────────────────┐
-│ Cloud Run       │     │ Cloud Run       │
-│ (us-central1)   │     │ (us-east1)      │
-└─────────────────┘     └─────────────────┘
-```
+The application uses a multi-region, high-availability architecture on GCP.
 
-- **Multi-region**: Deployed to 2 GCP regions for redundancy
-- **Zero-downtime**: Canary deployments with gradual traffic shift
-- **Auto-scaling**: 0 to N instances based on traffic
+- **Multi-region**: Deployed to 2 GCP regions for redundancy.
+- **Zero-downtime**: Canary deployments with gradual traffic shift.
+- **Auto-scaling**: 0 to N instances based on traffic.
 
-## 🔐 GCP Setup
+See [docs/architecture.md](docs/architecture.md) for detailed diagrams and component breakdowns.
 
-### 1. Required GitHub Secrets
+## 🔐 GCP Setup & Deployment
 
-| Secret | Description |
-|--------|-------------|
-| `GCP_PROJECT_ID` | Your GCP project ID |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | Workload Identity Provider |
-| `GCP_SERVICE_ACCOUNT` | Service account email |
-| `TF_STATE_BUCKET` | GCS bucket for Terraform state |
+Setting up the infrastructure requires specific GCP roles and GitHub secrets.
 
-### 2. Service Account Permissions
+1. **Authentication**: Uses Workload Identity Federation (keyless).
+2. **Infrastructure**: Provisioned via Terraform.
+3. **Deployment**: Automated via GitHub Actions.
 
-```bash
-# Create service account
-gcloud iam service-accounts create chuck-deployer \
-  --display-name="Chuck Norris Deployer"
+Refer to the [Deployment Guide](docs/deployment-guide.md) for step-by-step instructions on:
+- Service Account setup
+- Workload Identity Federation configuration
+- GitHub Secrets definitions
+- Initial provisioning and deployment tasks
 
-# Grant permissions
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:chuck-deployer@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/run.admin"
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:chuck-deployer@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/artifactregistry.admin"
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:chuck-deployer@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/compute.admin"
-
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-  --member="serviceAccount:chuck-deployer@$PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/iam.serviceAccountUser"
-```
-
-### 3. Workload Identity Federation
-
-See [docs/deployment-guide.md](docs/deployment-guide.md) for detailed setup.
-
-## 📦 Deployment
-
-### Initial Setup
-
-1. **Create Docker Registry** (one-time):
-   ```bash
-   cd infra/registry
-   terraform init -backend-config="bucket=YOUR_BUCKET" -backend-config="prefix=chuck-registry"
-   terraform apply -var="project_id=YOUR_PROJECT"
-   ```
-
-2. **Provision Infrastructure** (per environment):
-   - Go to GitHub Actions
-   - Run "Infrastructure Provision" workflow
-   - Select environment: dev, stg, or prod
-   - Action: plan (to review), then apply
-
-3. **Deploy Application**:
-   - Push to main branch (auto-deploys to dev)
-   - Or run "Deploy Application" workflow manually
-
-### Zero-Downtime Deploy
-
-The deploy workflow:
-1. Deploys new revision with 0% traffic
-2. Runs integration tests against canary
-3. Shifts traffic 50%
-4. Validates health
-5. Shifts traffic 100%
-6. Rolls back automatically on failure
+For operational details and troubleshooting, see:
+- [API Reference](docs/api-reference.md)
+- [Troubleshooting & Runbook](docs/troubleshooting.md)
 
 ## 🧪 Testing
 
