@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.1](https://github.com/fromthehell666/chuck-infra/compare/v0.1.0...v0.1.1) (2025-12-18)
+
+
+### Bug Fixes
+
+* **infra:** remove conflicting default_route_action from default url map ([716e561](https://github.com/fromthehell666/chuck-infra/commit/716e56138614a3fd93c2be49f652daaeff1baf9f))
+* **infra:** remove conflicting default_route_action from http_redirect ([ee6b6a1](https://github.com/fromthehell666/chuck-infra/commit/ee6b6a145e6f5c2b295acba71f066b23bf68edc1))
+
+
+### Documentation
+
+* finalize task and walkthrough for CI/CD refinements ([f534a94](https://github.com/fromthehell666/chuck-infra/commit/f534a94896a246f5332f2843e4011ad6fa45533d))
+
 ## 0.1.0 (2025-12-18)
 
 
