@@ -44,7 +44,7 @@ docker run -p 8080:8000 chuck-app
 │   ├── modules/cloud-run/  # Cloud Run service
 │   └── modules/load-balancer/
 ├── .github/workflows/      # CI/CD pipelines
-│   ├── docker-build.yml    # Build, push, and update image tag
+│   ├── app-provision.yml   # Build, push, and update image tag
 │   ├── release-please.yml  # Automatic versioning
 │   ├── integration-tests.yml # Automated LB-centric tests
 │   └── infra-provision.yml # Terraform provisioning (Dev/Stg/Prod)
