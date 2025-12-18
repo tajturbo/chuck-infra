@@ -33,17 +33,17 @@ env:
   REGION: us-central1
   SECONDARY_REGION: us-east1
 
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+  
 jobs:
   terraform:
     name: Terraform Workflow
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
     
-    permissions:
-      contents: read
-      id-token: write
-      pull-requests: write
-
     defaults:
       run:
         working-directory: infra
