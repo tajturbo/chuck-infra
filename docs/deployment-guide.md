@@ -1,139 +1,19 @@
 # Deployment Guide
 
-Complete guide for deploying the Chuck Norris Jokes application to GCP.
+This guide covers the ongoing deployment lifecycle, operations, and maintenance of the Chuck Norris Jokes application.
 
-## 1. Prerequisites
+> [!NOTE]
+> This guide assumes you have already completed the one-time project preparation. If not, please see the **[Initial Setup Guide](initial-setup.md)** first.
 
-Before starting, ensure you have:
-1.  A **GCP Project** with billing enabled.
-2.  The **`gcloud` CLI** installed and authenticated.
-3.  A **GCS Bucket** for Terraform state.
-4.  An **Artifact Registry** repository (Docker format) named `chuck-registry`.
+## 1. Initial Deployment (Bootstrap)
 
-### Resource Setup
+Before the automated GitOps lifecycle can take over, you must perform the first-ever deployment manually to establish the infrastructure:
 
-Run these commands to set up the foundation:
-
-```bash
-# Set your project ID
-export PROJECT_ID="your-project-id"
-export REGION="us-central1"
-
-# Create State Bucket (enable versioning for safety)
-gsutil mb -p $PROJECT_ID -l ${REGION} gs://${PROJECT_ID}-tfstate
-gsutil versioning set on gs://${PROJECT_ID}-tfstate
-
-# Create Artifact Registry
-gcloud artifacts repositories create chuck-registry \
-    --repository-format=docker \
-    --location=${REGION} \
-    --description="Docker repository for Chuck Norris app"
-```
-
-
-
-### Create Service Account
-
-```bash
-# Create service account
-gcloud iam service-accounts create chuck-deployer \
-  --display-name="Chuck Norris App Deployer"
-
-SA_EMAIL="chuck-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
-
-# Grant required roles
-for ROLE in \
-  roles/run.admin \
-  roles/artifactregistry.admin \
-  roles/compute.admin \
-  roles/iam.serviceAccountUser \
-  roles/iam.serviceAccountTokenCreator \
-  roles/storage.admin
-do
-  gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:${SA_EMAIL}" \
-    --role="${ROLE}"
-done
-```
-
-### Required Permissions Summary
-The Service Account needs the following roles:
-| Role | Purpose |
-|------|---------|
-| `roles/run.admin` | Manage Cloud Run services |
-| `roles/artifactregistry.admin` | Push images to Artifact Registry |
-| `roles/compute.admin` | Manage Load Balancer and Network groups |
-| `roles/iam.serviceAccountUser` | Act as the service account |
-| `roles/storage.admin` | Manage Terraform state in GCS |
-| `roles/iam.serviceAccountTokenCreator` | Required for WIF token exchange |
-
-
-## 2. Workload Identity Federation
-
-Set up keyless authentication from GitHub Actions.
-
-### Recommended: Use Helper Script
-We have provided a helper script that handles the setup automatically:
-
-```bash
-./scripts/setup-wif.sh
-```
-
-### Manual Setup
-If you prefer to run commands manually, use these updated commands which include the required repository owner constraint:
-
-```bash
-# Create Workload Identity Pool
-gcloud iam workload-identity-pools create "github-pool" \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --display-name="GitHub Actions Pool"
-
-# Create Provider (with repo owner constraint to pass validation)
-gcloud iam workload-identity-pools providers create-oidc "github-provider" \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --workload-identity-pool="github-pool" \
-  --display-name="GitHub Provider" \
-  --issuer-uri="https://token.actions.githubusercontent.com" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
-  --attribute-condition="assertion.repository_owner=='fromthehell666'"
-
-# Update Attribute Mapping (optional cleanup)
-gcloud iam workload-identity-pools providers update-oidc "github-provider" \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --workload-identity-pool="github-pool" \
-  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository"
-
-# Get the Workload Identity Provider resource name
-export WIP=$(gcloud iam workload-identity-pools providers describe github-provider \
-  --project="${PROJECT_ID}" \
-  --location="global" \
-  --workload-identity-pool="github-pool" \
-  --format="value(name)")
-
-echo "Workload Identity Provider: $WIP"
-
-# Allow your repo to impersonate the service account
-export REPO="fromthehell666/chuck-infra"
-
-gcloud iam service-accounts add-iam-policy-binding "${SA_EMAIL}" \
-  --project="${PROJECT_ID}" \
-  --role="roles/iam.workloadIdentityUser" \
-  --member="principalSet://iam.googleapis.com/${WIP}/attribute.repository/${REPO}"
-```
-
-## 3. GitHub Secrets Configuration
-
-Add these secrets to your GitHub repository:
-
-| Secret | Value |
-|--------|-------|
-| `GCP_PROJECT_ID` | Your GCP project ID |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | The `$WIP` value from step 2 |
-| `GCP_SERVICE_ACCOUNT` | `chuck-deployer@${PROJECT_ID}.iam.gserviceaccount.com` |
-| `TF_STATE_BUCKET` | `${PROJECT_ID}-tfstate` (Just the name, **NO** `gs://` prefix) |
+1.  **Build First Image**: Push code to the `main` branch or manually trigger the `Build and Push Docker Image` workflow.
+2.  **Provision Infrastructure**: Manually trigger the `Infrastructure Provision` workflow:
+    - Environment: `dev`
+    - Action: `apply`
+3.  **Verify**: Ensure the service is accessible via the Load Balancer URL provided in the workflow outputs.
 
 ## 4. Initial Deployment
 

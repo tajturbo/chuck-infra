@@ -52,14 +52,7 @@ docker run -p 8080:8000 chuck-app
 └── docs/                   # Documentation
 ```
 
-## 🔄 Release Workflow
-
-This project uses **Conventional Commits** and **release-please** for automatic versioning. The workflow follows these steps:
-1. **Automated Build**: Commits to `/app` trigger tests, builds, and automated tag updates in Terraform.
-2. **Manual Deployment**: Infrastructure updates (Dev/Stg/Prod) are triggered manually via GitHub Actions.
-3. **Automated Validation**: After deployment, integration tests run automatically against the Load Balancer.
-
-For a detailed breakdown, see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Deployment Guide](docs/deployment-guide.md).
+For a detailed breakdown of the release process, see [CONTRIBUTING.md](CONTRIBUTING.md) and the **[Deployment Guide](docs/deployment-guide.md)**. For first-time environment setup, refer to the **[Initial Setup Guide](docs/initial-setup.md)**.
 
 ## 🔧 Architecture
 
