@@ -134,7 +134,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
-          terraform plan \iq
+          terraform plan \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var="environment=${{ env.ENV }}" \
             -var="region=${{ env.REGION }}" \
