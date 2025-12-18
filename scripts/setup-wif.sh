@@ -43,9 +43,6 @@ gcloud iam workload-identity-pools providers update-oidc "$PROVIDER_NAME" \
     --workload-identity-pool="$POOL_NAME" \
     --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository"
 
-    --workload-identity-pool="$POOL_NAME" \
-    --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository"
-
 # 4. Bind Service Account to Workload Identity Pool
 echo "Binding Service Account to Pool (step 3/3)..."
 SERVICE_ACCOUNT="chuck-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
