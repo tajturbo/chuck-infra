@@ -3,6 +3,7 @@
 # Triggered on: push to main (dev), tag creation (stg/prod)
 
 name: Application Provision
+run-name: "Application Provision: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'dev') || (startsWith(github.ref, 'refs/tags/v') && 'stg') || 'prod' }} (${{ github.ref_name }})"
 
 on:
   push:
