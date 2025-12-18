@@ -73,18 +73,10 @@ resource "google_compute_url_map" "default" {
   name            = "${var.name}-url-map"
   default_service = google_compute_backend_service.default.id
 
-  host_rule {
-    hosts        = ["*"]
-    path_matcher = "all-paths"
-  }
-
-  path_matcher {
-    name            = "all-paths"
-    default_service = google_compute_backend_service.default.id
-
-    path_rule {
-      paths   = ["/*"]
-      service = google_compute_backend_service.default.id
+  default_route_action {
+    weighted_backend_services {
+      backend_service = google_compute_backend_service.default.id
+      weight          = 100
     }
   }
 }
@@ -123,13 +115,6 @@ resource "google_compute_url_map" "http_redirect" {
     https_redirect         = true
     redirect_response_code = "MOVED_PERMANENTLY_DEFAULT"
     strip_query            = false
-  }
-
-  default_route_action {
-    weighted_backend_services {
-      backend_service = google_compute_backend_service.default.id
-      weight          = 100
-    }
   }
 }
 
