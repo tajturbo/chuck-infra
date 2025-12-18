@@ -1,2 +1,1 @@
-# this value is updated automatically
-image_tag = "fc874ff"
+image_tag = "3dbbe13"
