@@ -61,7 +61,7 @@ resource "google_cloud_run_v2_service" "service" {
       image = var.container_image
 
       ports {
-        container_port = 80
+        container_port = 8000
       }
 
       resources {
@@ -75,7 +75,7 @@ resource "google_cloud_run_v2_service" "service" {
       startup_probe {
         http_get {
           path = "/health"
-          port = 80
+          port = 8000
         }
         initial_delay_seconds = 5
         timeout_seconds       = 3
@@ -86,7 +86,7 @@ resource "google_cloud_run_v2_service" "service" {
       liveness_probe {
         http_get {
           path = "/health"
-          port = 80
+          port = 8000
         }
         initial_delay_seconds = 10
         timeout_seconds       = 3
