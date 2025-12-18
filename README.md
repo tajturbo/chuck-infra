@@ -9,12 +9,9 @@ A full-stack Python application that displays Chuck Norris jokes, containerized 
 
 | Environment | Status | URL |
 |-------------|--------|-----|
-| **Development** | ![Success](https://img.shields.io/badge/status-active-success) | [Visit Dev Site](https://dev.chuck.tajturbo.com) |
-| **Staging** | ![Active](https://img.shields.io/badge/status-pending-yellow) | [Visit Staging Site](https://stg.chuck.tajturbo.com) |
-| **Production** | ![Active](https://img.shields.io/badge/status-pending-lightgrey) | [Visit Production Site](https://chuck.tajturbo.com) |
-
-> [!NOTE]
-> The URLs above use `tajturbo.com` as a placeholder. In a real deployment, these would map to your actual DNS records or LB IP addresses via `.nip.io`.
+| **Development** | ![Success](https://img.shields.io/badge/status-active-success) | [https://136.110.212.221.nip.io](https://136.110.212.221.nip.io) |
+| **Staging** | ![Success](https://img.shields.io/badge/status-active-success) | [https://35.244.233.10.nip.io](https://35.244.233.10.nip.io) |
+| **Production** | ![Pending](https://img.shields.io/badge/status-pending-lightgrey) | [https://chuck.tajturbo.com](https://chuck.tajturbo.com) |
 
 ## 🚀 Quick Start
 
