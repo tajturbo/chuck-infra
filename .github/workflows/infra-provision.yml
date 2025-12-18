@@ -43,6 +43,9 @@ jobs:
     name: Terraform Workflow
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
+    outputs:
+      env: ${{ steps.vars.outputs.ENV }}
+      action: ${{ steps.vars.outputs.ACTION }}
     
     defaults:
       run:
@@ -58,9 +61,13 @@ jobs:
           if [[ "${{ github.event_name }}" == "push" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
             echo "ACTION=plan" >> $GITHUB_ENV
+            echo "ENV=dev" >> $GITHUB_OUTPUT
+            echo "ACTION=plan" >> $GITHUB_OUTPUT
           else
             echo "ENV=${{ inputs.environment }}" >> $GITHUB_ENV
             echo "ACTION=${{ inputs.action }}" >> $GITHUB_ENV
+            echo "ENV=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "ACTION=${{ inputs.action }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Authenticate to Google Cloud
@@ -127,3 +134,15 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           terraform output >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  run-tests:
+    name: Run Integration Tests
+    needs: terraform
+    if: needs.terraform.outputs.action == 'apply' && success()
+    uses: ./.github/workflows/integration-tests.yml
+    with:
+      environment: ${{ needs.terraform.outputs.env }}
+    secrets:
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
