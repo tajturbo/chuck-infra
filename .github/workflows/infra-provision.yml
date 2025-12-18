@@ -10,6 +10,11 @@ on:
       - main
     paths:
       - "infra/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "infra/**"
   workflow_dispatch:
     inputs:
       environment:
@@ -28,6 +33,25 @@ on:
           - plan
           - apply
           - destroy
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: string
+      action:
+        description: 'Terraform action'
+        required: true
+        type: string
+    secrets:
+      GCP_PROJECT_ID:
+        required: true
+      GCP_WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+      GCP_SERVICE_ACCOUNT:
+        required: true
+      TF_STATE_BUCKET:
+        required: true
 
 env:
   TF_VERSION: '1.6.0'
@@ -43,7 +67,7 @@ jobs:
   terraform:
     name: Terraform Workflow
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
+    environment: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') && inputs.environment || 'dev' }}
     outputs:
       env: ${{ steps.vars.outputs.ENV }}
       action: ${{ steps.vars.outputs.ACTION }}
@@ -59,12 +83,12 @@ jobs:
       - name: Setup Workflow Variables
         id: vars
         run: |
-          if [[ "${{ github.event_name }}" == "push" ]]; then
+          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
             echo "ACTION=plan" >> $GITHUB_ENV
             echo "ENV=dev" >> $GITHUB_OUTPUT
             echo "ACTION=plan" >> $GITHUB_OUTPUT
-          else
+          elif [[ "${{ github.event_name }}" == "workflow_call" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "ENV=${{ inputs.environment }}" >> $GITHUB_ENV
             echo "ACTION=${{ inputs.action }}" >> $GITHUB_ENV
             echo "ENV=${{ inputs.environment }}" >> $GITHUB_OUTPUT
