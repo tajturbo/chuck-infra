@@ -2,6 +2,7 @@
 # Deploys Terraform infrastructure for dev/stg/prod environments
 
 name: Infrastructure Provision
+run-name: "Terraform ${{ github.event_name == 'workflow_dispatch' && format('{0} on {1}', inputs.action, inputs.environment) || 'plan on dev' }} (${{ github.ref_name }})"
 
 on:
   push:
