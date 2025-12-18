@@ -1,6 +1,20 @@
 # Chuck Norris Jokes Application
 
+[![Application Provision](https://github.com/tajturbo/chuck-infra/actions/workflows/app-provision.yml/badge.svg)](https://github.com/tajturbo/chuck-infra/actions/workflows/app-provision.yml)
+[![Infrastructure Provision](https://github.com/tajturbo/chuck-infra/actions/workflows/infra-provision.yml/badge.svg)](https://github.com/tajturbo/chuck-infra/actions/workflows/infra-provision.yml)
+
 A full-stack Python application that displays Chuck Norris jokes, containerized with Docker and deployed to GCP with zero-downtime deployments.
+
+## 🌐 Environments
+
+| Environment | Status | URL |
+|-------------|--------|-----|
+| **Development** | ![Success](https://img.shields.io/badge/status-active-success) | [Visit Dev Site](https://dev.chuck.tajturbo.com) |
+| **Staging** | ![Active](https://img.shields.io/badge/status-pending-yellow) | [Visit Staging Site](https://stg.chuck.tajturbo.com) |
+| **Production** | ![Active](https://img.shields.io/badge/status-pending-lightgrey) | [Visit Production Site](https://chuck.tajturbo.com) |
+
+> [!NOTE]
+> The URLs above use `tajturbo.com` as a placeholder. In a real deployment, these would map to your actual DNS records or LB IP addresses via `.nip.io`.
 
 ## 🚀 Quick Start
 
