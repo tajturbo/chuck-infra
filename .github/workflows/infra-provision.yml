@@ -4,6 +4,11 @@
 name: Infrastructure Provision
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/**"
   workflow_dispatch:
     inputs:
       environment:
@@ -30,9 +35,9 @@ env:
 
 jobs:
   terraform:
-    name: Terraform ${{ inputs.action }} - ${{ inputs.environment }}
+    name: Terraform Workflow
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
     
     permissions:
       contents: read
@@ -46,6 +51,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Workflow Variables
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "ENV=dev" >> $GITHUB_ENV
+            echo "ACTION=plan" >> $GITHUB_ENV
+          else
+            echo "ENV=${{ inputs.environment }}" >> $GITHUB_ENV
+            echo "ACTION=${{ inputs.action }}" >> $GITHUB_ENV
+          fi
 
       - name: Authenticate to Google Cloud
         id: auth
@@ -66,7 +82,7 @@ jobs:
         run: |
           terraform init \
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-            -backend-config="prefix=chuck-${{ inputs.environment }}"
+            -backend-config="prefix=chuck-${{ env.ENV }}"
 
       - name: Terraform Validate
         run: terraform validate
@@ -76,11 +92,9 @@ jobs:
         run: |
           terraform plan \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
-            -var="environment=${{ inputs.environment }}" \
+            -var="environment=${{ env.ENV }}" \
             -var="region=${{ env.REGION }}" \
             -var="secondary_region=${{ env.SECONDARY_REGION }}" \
-            -var="image_tag=${{ github.sha }}" \
-            -var="create_registry=$([[ "${{ inputs.environment }}" == "dev" ]] && echo "true" || echo "false")" \
             -out=tfplan \
             -no-color
         continue-on-error: true
@@ -90,24 +104,24 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        if: inputs.action == 'apply'
+        if: env.ACTION == 'apply'
         run: |
           terraform apply -auto-approve tfplan
 
       - name: Terraform Destroy
-        if: inputs.action == 'destroy'
+        if: env.ACTION == 'destroy'
         run: |
           terraform destroy \
             -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
-            -var="environment=${{ inputs.environment }}" \
+            -var="environment=${{ env.ENV }}" \
             -var="region=${{ env.REGION }}" \
             -var="secondary_region=${{ env.SECONDARY_REGION }}" \
             -auto-approve
 
       - name: Terraform Outputs
-        if: inputs.action == 'apply'
+        if: env.ACTION == 'apply'
         run: |
-          echo "## Infrastructure Deployed - ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "## Infrastructure Deployed - ${{ env.ENV }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Outputs" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
