@@ -124,6 +124,13 @@ resource "google_compute_url_map" "http_redirect" {
     redirect_response_code = "MOVED_PERMANENTLY_DEFAULT"
     strip_query            = false
   }
+
+  default_route_action {
+    weighted_backend_services {
+      backend_service = google_compute_backend_service.default.id
+      weight          = 100
+    }
+  }
 }
 
 # Global forwarding rule for HTTPS
