@@ -64,11 +64,21 @@ jobs:
             --region=${{ env.SECONDARY_REGION }} \
             --format='value(status.url)')
           
+          LB_URL=$(gcloud compute url-maps list \
+            --filter="name~chuck-${{ inputs.environment }}-url-map" \
+            --format='value(defaultService)' | xargs -I {} gcloud compute backend-services describe {} --global --format='value(name)')
+          # Actually it's easier to just construct it if we know the IP or use the specific naming convention
+          # Since we reserve a static IP, we can look it up.
+          LB_IP=$(gcloud compute addresses describe chuck-${{ inputs.environment }}-ip --global --format='value(address)')
+          LB_URL="https://${LB_IP}.nip.io"
+          
           echo "primary_url=$PRIMARY_URL" >> $GITHUB_OUTPUT
           echo "secondary_url=$SECONDARY_URL" >> $GITHUB_OUTPUT
+          echo "lb_url=$LB_URL" >> $GITHUB_OUTPUT
           
           echo "Primary URL: $PRIMARY_URL"
           echo "Secondary URL: $SECONDARY_URL"
+          echo "Load Balancer URL: $LB_URL"
 
       - name: Test Primary - Health Endpoint
         run: |
@@ -94,21 +104,29 @@ jobs:
           fi
           echo "✅ Secondary health check passed"
 
-      - name: Test Primary - Main Page
+      - name: Test Load Balancer - Main Page
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ steps.urls.outputs.primary_url }}/")
+          STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" "${{ steps.urls.outputs.lb_url }}/")
           if [ "$STATUS" != "200" ]; then
-            echo "Primary main page returned $STATUS"
-            exit 1
+            echo "Load Balancer main page returned $STATUS"
+            # Give it a retry, SSL cert might be provisioning
+            echo "Retrying in 30s..."
+            sleep 30
+            STATUS=$(curl -s -k -o /dev/null -w "%{http_code}" "${{ steps.urls.outputs.lb_url }}/")
+          fi
+          
+          if [ "$STATUS" != "200" ]; then
+             echo "Load Balancer main page failed with $STATUS"
+             exit 1
           fi
           
           # Check for Chuck Norris content
-          BODY=$(curl -s "${{ steps.urls.outputs.primary_url }}/")
+          BODY=$(curl -s -k "${{ steps.urls.outputs.lb_url }}/")
           if ! echo "$BODY" | grep -qi "chuck"; then
             echo "Main page doesn't contain Chuck Norris content"
             exit 1
           fi
-          echo "✅ Primary main page OK"
+          echo "✅ Load Balancer main page OK"
 
       - name: Test Primary - API Endpoint
         run: |
