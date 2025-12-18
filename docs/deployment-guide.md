@@ -9,7 +9,7 @@ This guide covers the ongoing deployment lifecycle, operations, and maintenance 
 
 Before the automated GitOps lifecycle can take over, you must perform the first-ever deployment manually to establish the infrastructure:
 
-1.  **Build First Image**: Push code to the `main` branch or manually trigger the **`Application Provision`** workflow.
+1.  **Build First Image**: Push code to the `main` branch or manually trigger the **`Docker Build and Push`** workflow.
 2.  **Provision Infrastructure**: Manually trigger the `Infrastructure Provision` workflow:
     - Environment: `dev`
     - Action: `apply`
@@ -19,7 +19,7 @@ Before the automated GitOps lifecycle can take over, you must perform the first-
 
 ### Step 1: Build and Push First Image
 
-Push code to `main` branch or run `app-provision` workflow.
+Push code to `main` branch or run `docker-build` workflow.
 
 ### Step 2: Provision Infrastructure
 
@@ -33,7 +33,7 @@ Repeat for `stg` and `prod` as needed.
 ### Step 3: Deployment lifecycle
 
 1.  **Commit Changes**: Push your application code changes to the `/app` directory on the `main` branch.
-2.  **Continuous Integration**: The **`Application Provision`** workflow triggers automatically. It runs unit tests and, if successful, builds and pushes a new image to Artifact Registry.
+2.  **Continuous Integration**: The **`Docker Build and Push`** workflow triggers automatically. It runs unit tests and, if successful, builds and pushes a new image to Artifact Registry.
 3.  **GitOps Update**: Upon completion, the build workflow automatically updates `infra/terraform.tfvars` with the new image tag.
 4.  **Automated Planning**: The update to `infra/terraform.tfvars` triggers the `Infrastructure Provision` workflow to perform a Terraform `plan` for the `dev` environment.
 5.  **Manual Deployment**: A developer must manually trigger the `Infrastructure Provision` workflow with `action: apply` and `environment: dev` from the `main` branch to deploy the changes.

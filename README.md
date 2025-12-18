@@ -1,6 +1,6 @@
 # Chuck Norris Jokes Application
 
-[![Application Provision](https://github.com/tajturbo/chuck-infra/actions/workflows/app-provision.yml/badge.svg)](https://github.com/tajturbo/chuck-infra/actions/workflows/app-provision.yml)
+[![Docker Build and Push](https://github.com/tajturbo/chuck-infra/actions/workflows/docker-build.yml/badge.svg)](https://github.com/tajturbo/chuck-infra/actions/workflows/docker-build.yml)
 [![Infrastructure Provision](https://github.com/tajturbo/chuck-infra/actions/workflows/infra-provision.yml/badge.svg)](https://github.com/tajturbo/chuck-infra/actions/workflows/infra-provision.yml)
 
 A full-stack Python application that displays Chuck Norris jokes, containerized with Docker and deployed to GCP with zero-downtime deployments.
@@ -55,7 +55,7 @@ docker run -p 8080:8000 chuck-app
 │   ├── modules/cloud-run/  # Cloud Run service
 │   └── modules/load-balancer/
 ├── .github/workflows/      # CI/CD pipelines
-│   ├── app-provision.yml   # Build, push, and update image tag
+│   ├── docker-build.yml    # Build, push, and update image tag
 │   ├── release-please.yml  # Automatic versioning
 │   ├── integration-tests.yml # Automated LB-centric tests
 │   └── infra-provision.yml # Terraform provisioning (Dev/Stg/Prod)

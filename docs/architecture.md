@@ -44,12 +44,12 @@ graph TB
 
 ### Infrastructure Layer
 
-| Component | GCP Service | Purpose |
-|-----------|-------------|---------|
-| Container Registry | Artifact Registry | Docker image storage |
-| Compute | Cloud Run | Serverless containers |
-| Load Balancing | Global HTTP(S) LB | Traffic distribution, SSL termination, HTTP→HTTPS redirect, compression |
-| DNS | Cloud DNS (optional) | Domain management |
+| Component | GCP Service | Purpose | Workflow Name |
+|-----------|-------------|---------|---------------|
+| Container Registry | Artifact Build | GitHub Actions | `Docker Build and Push` |
+| Infrastructure | Terraform | Infrastructure Provision | `Terraform Apply` |
+| Load Balancing | Global HTTP(S) LB | Traffic distribution, SSL termination, HTTP→HTTPS redirect, compression | - |
+| DNS | Cloud DNS (optional) | Domain management | - |
 
 ## Deployment Strategy
 
