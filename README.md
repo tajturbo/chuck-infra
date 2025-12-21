@@ -70,7 +70,7 @@ The application uses a multi-region, high-availability architecture on GCP.
 
 - **Multi-region**: Deployed to `us-central1` and `us-east1` for maximum redundancy.
 - **Zero-downtime**: Leverages Cloud Run's native revision management for safe deployments.
-- **Auto-scaling**: Scales from 0 to 10+ instances based on request concurrency.
+- **Manual scaling**: Fixed to 1 instance per region (scalable via Terraform).
 
 See [docs/architecture.md](docs/architecture.md) for detailed diagrams.
 

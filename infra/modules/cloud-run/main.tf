@@ -1,5 +1,5 @@
 # Cloud Run Service Module
-# Deploys a container to Cloud Run with auto-scaling and traffic management
+# Deploys a container to Cloud Run with manual scaling and traffic management
 
 variable "project_id" {
   description = "GCP Project ID"

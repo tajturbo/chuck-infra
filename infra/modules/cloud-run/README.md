@@ -6,7 +6,7 @@ Provisions a Google Cloud Run (v2) service with standard defaults for internal a
 - Multi-revision support
 - Health check probes (startup, liveness)
 - Labels for environment tracking
-- Configurable auto-scaling
+- Configurable manual scaling
 
 ## Inputs
 

@@ -23,7 +23,7 @@ gcloud run services update-traffic $SERVICE \
 ```
 
 ### 2. Emergency Scale Up
-If the application is under heavy load and auto-scaling is too slow or hit limits.
+If the application is under heavy load and manual scaling needs adjustment.
 
 ```bash
 gcloud run services update chuck-dev-primary \
