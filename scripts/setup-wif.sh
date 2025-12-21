@@ -103,6 +103,15 @@ do
       --role="${ROLE}" \
       --quiet >/dev/null
   done
+
+  # Grant Service Account User role on the default Compute SA (required for Cloud Run updates)
+  DEFAULT_COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+  echo "Granting roles/iam.serviceAccountUser to ${FINOPS_SA_ID} on ${DEFAULT_COMPUTE_SA}"
+  gcloud iam service-accounts add-iam-policy-binding "${DEFAULT_COMPUTE_SA}" \
+    --project="${PROJECT_ID}" \
+    --member="serviceAccount:${FINOPS_SA_EMAIL}" \
+    --role="roles/iam.serviceAccountUser" \
+    --quiet >/dev/null
 done
 
 # 6. Output Configuration for GitHub Secrets
