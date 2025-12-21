@@ -33,15 +33,9 @@ variable "image_tag" {
   default     = "latest"
 }
 
-# Scaling configuration per environment (Fixed to 1 instance per region)
-variable "min_instances" {
-  description = "Number of instances per region (fixed scaling)"
-  type        = number
-  default     = 1
-}
-
-variable "max_instances" {
-  description = "Number of instances per region (fixed scaling)"
+# Manual scaling configuration
+variable "desired_instances" {
+  description = "Fixed number of instances per region"
   type        = number
   default     = 1
 }

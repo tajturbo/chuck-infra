@@ -36,8 +36,8 @@ module "cloud_run_primary" {
   name            = "${local.name_prefix}-primary"
   container_image = local.container_image
   environment     = var.environment
-  min_instances   = var.min_instances
-  max_instances   = var.max_instances
+  min_instances   = var.desired_instances
+  max_instances   = var.desired_instances
 
   depends_on = [google_project_service.apis]
 }
@@ -51,8 +51,8 @@ module "cloud_run_secondary" {
   name            = "${local.name_prefix}-secondary"
   container_image = local.container_image
   environment     = var.environment
-  min_instances   = var.min_instances
-  max_instances   = var.max_instances
+  min_instances   = var.desired_instances
+  max_instances   = var.desired_instances
 
   depends_on = [google_project_service.apis]
 }
