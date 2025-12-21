@@ -51,7 +51,7 @@ Repeat for `stg` and `prod` as needed.
 │     ↓                                                            │
 │  3. Terraform Plan for dev (Auto)                                │
 │     ↓                                                            │
-│  4. Terraform Apply for dev (MANUAL)                             │
+│  4. Terraform Apply for dev (Auto)                             │
 │     ↓                                                            │
 │  5. Integration tests run against Load Balancer (Auto)           │
 │     ↓                                                            │

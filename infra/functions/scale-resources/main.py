@@ -1,0 +1,52 @@
+import os
+import base64
+import json
+from google.cloud import run_v2
+
+def scale_cloud_run(event, context):
+    """
+    Cloud Function to scale Cloud Run services based on environment and action.
+    Triggered by Cloud Scheduler via Pub/Sub.
+    """
+    if 'data' not in event:
+        print("No data in event")
+        return
+
+    try:
+        payload = json.loads(base64.b64decode(event['data']).decode('utf-8'))
+    except Exception as e:
+        print(f"Error decoding payload: {e}")
+        return
+
+    action = payload.get('action') # 'sleep' or 'wake'
+    env = payload.get('environment')
+    project_id = os.environ.get('GCP_PROJECT')
+    region = os.environ.get('GCP_REGION', 'us-central1') # Default but should be set
+
+    if not action or not env:
+        print(f"Missing action ({action}) or environment ({env})")
+        return
+
+    client = run_v2.ServicesClient()
+    parent = f"projects/{project_id}/locations/-" # Search across all locations
+
+    # List all services in the project
+    services = client.list_services(parent=parent)
+
+    for service in services:
+        # Check if service belongs to the target environment and app
+        labels = service.labels or {}
+        if labels.get('environment') == env and labels.get('app') == 'chuck-norris':
+            target_min = 0 if action == 'sleep' else int(os.environ.get('WAKE_MIN_INSTANCES', '0'))
+            
+            print(f"Processing service: {service.name} (Env: {env}, Action: {action})")
+            
+            # Update min_instances
+            service.template.scaling.min_instance_count = target_min
+            
+            # Update the service
+            request = run_v2.UpdateServiceRequest(service=service)
+            operation = client.update_service(request=request)
+            print(f"Update started for {service.name}. Operation: {operation.operation.name}")
+
+    print("Scaling operation submitted.")

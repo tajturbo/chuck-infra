@@ -45,3 +45,16 @@ variable "max_instances" {
   type        = number
   default     = 10
 }
+
+# FinOps configuration
+variable "finops_schedule_enabled" {
+  description = "Enable automated start/stop schedule for this environment"
+  type        = bool
+  default     = false
+}
+
+variable "finops_timezone" {
+  description = "Timezone for the FinOps schedule"
+  type        = string
+  default     = "Europe/Prague" # CET/CEST
+}
