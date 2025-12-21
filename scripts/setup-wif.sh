@@ -96,7 +96,7 @@ do
   fi
   
   # Grant permissions for scaling (idempotent)
-  for ROLE in roles/run.developer roles/run.viewer roles/eventarc.eventReceiver
+  for ROLE in roles/run.developer roles/run.viewer roles/eventarc.eventReceiver roles/artifactregistry.reader
   do
     gcloud projects add-iam-policy-binding "$PROJECT_ID" \
       --member="serviceAccount:${FINOPS_SA_EMAIL}" \

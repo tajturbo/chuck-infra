@@ -81,6 +81,7 @@ The `chuck-finops-${env}` service accounts require:
 | `roles/run.developer` | Scale Cloud Run services |
 | `roles/run.viewer` | List Cloud Run services |
 | `roles/eventarc.eventReceiver` | Receive Pub/Sub events via Eventarc |
+| `roles/artifactregistry.reader` | Access container images during update |
 
 ## 3. Workload Identity Federation (WIF)
 
