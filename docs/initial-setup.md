@@ -67,6 +67,8 @@ done
 | `roles/iam.serviceAccountTokenCreator` | Required for Workload Identity Federation |
 | `roles/serviceusage.serviceUsageAdmin` | Enable APIs for the project |
 | `roles/iam.serviceAccountAdmin` | Create and manage Service Accounts |
+| `roles/resourcemanager.projectIamAdmin` | Manage project-level IAM policies |
+| `roles/eventarc.admin` | Manage Eventarc triggers for Functions |
 | `roles/cloudfunctions.admin` | Manage FinOps Cloud Functions |
 | `roles/cloudscheduler.admin` | Manage FinOps Start/Stop schedules |
 | `roles/pubsub.admin` | Manage FinOps trigger topics |

@@ -65,6 +65,8 @@ for ROLE in \
   roles/storage.admin \
   roles/serviceusage.serviceUsageAdmin \
   roles/iam.serviceAccountAdmin \
+  roles/resourcemanager.projectIamAdmin \
+  roles/eventarc.admin \
   roles/cloudfunctions.admin \
   roles/cloudscheduler.admin \
   roles/pubsub.admin \
