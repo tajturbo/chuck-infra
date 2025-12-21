@@ -82,16 +82,21 @@ Shared resources:
 
 ## Scaling Configuration
 
-| Environment | Min Instances | Max Instances |
-|-------------|---------------|---------------|
-| dev | 0 | 2 |
-| stg | 0 | 5 |
-| prod | 1 | 100 |
+The application uses a **Fixed Scaling** model to ensure predictable performance and cost. Autoscaling is disabled.
 
-Cloud Run automatically scales based on:
-- Request concurrency (default: 80)
-- CPU utilization
-- Memory utilization
+| Environment | Instances per Region |
+|-------------|----------------------|
+| dev | 1 |
+| stg | 1 |
+| prod | 1 |
+
+### FinOps Automation
+For **dev** and **stg** environments, infrastructure is automatically scaled to **0 instances** during off-office hours (18:00 - 08:00 CET) to save costs. In the morning, it is restored to **1 instance** per region.
+
+Cloud Run scaling is enforced via:
+- `min_instance_count`: 1 (Office hours)
+- `max_instance_count`: 1 (Office hours)
+- Both set to 0 during off-hours (FinOps)
 
 ## Security
 

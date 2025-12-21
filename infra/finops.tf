@@ -62,6 +62,7 @@ resource "google_cloudfunctions2_function" "scale_resources" {
     service_account_email = data.google_service_account.finops_sa[0].email
     environment_variables = {
       WAKE_MIN_INSTANCES = tostring(var.min_instances)
+      WAKE_MAX_INSTANCES = tostring(var.max_instances)
       GCP_REGION         = var.region
       GCP_PROJECT        = var.project_id
     }

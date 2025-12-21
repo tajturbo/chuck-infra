@@ -39,16 +39,19 @@ def scale_cloud_run(event, context):
         # Check if service belongs to the target environment and app
         labels = service.labels or {}
         if labels.get('environment') == env and labels.get('app') == 'chuck-norris':
-            target_min = 0 if action == 'sleep' else int(os.environ.get('WAKE_MIN_INSTANCES', '0'))
+            target_min = 0 if action == 'sleep' else int(os.environ.get('WAKE_MIN_INSTANCES', '1'))
+            target_max = 0 if action == 'sleep' else int(os.environ.get('WAKE_MAX_INSTANCES', '1'))
             
             print(f"Processing service: {service.name} (Env: {env}, Action: {action})")
+            print(f"Target scaling: min={target_min}, max={target_max}")
             
-            # Update min_instances
+            # Update scaling configuration
             service.template.scaling.min_instance_count = target_min
+            service.template.scaling.max_instance_count = target_max
             
             # Update the service
             request = run_v2.UpdateServiceRequest(service=service)
             operation = client.update_service(request=request)
             print(f"Update started for {service.name}. Operation: {operation.operation.name}")
 
-    print("Scaling operation submitted.")
+    print("Scaling operation finished.")

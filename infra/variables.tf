@@ -33,17 +33,17 @@ variable "image_tag" {
   default     = "latest"
 }
 
-# Scaling configuration per environment
+# Scaling configuration per environment (Fixed to 1 instance per region)
 variable "min_instances" {
-  description = "Minimum number of instances"
+  description = "Number of instances per region (fixed scaling)"
   type        = number
-  default     = 0
+  default     = 1
 }
 
 variable "max_instances" {
-  description = "Maximum number of instances"
+  description = "Number of instances per region (fixed scaling)"
   type        = number
-  default     = 10
+  default     = 1
 }
 
 # FinOps configuration
