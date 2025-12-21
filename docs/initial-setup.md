@@ -74,6 +74,14 @@ done
 | `roles/pubsub.admin` | Manage FinOps trigger topics |
 | `roles/cloudbuild.builds.editor` | Build Cloud Functions Gen2 source |
 
+### FinOps Service Account Roles
+The `chuck-finops-${env}` service accounts require:
+| Role | Purpose |
+|------|---------|
+| `roles/run.developer` | Scale Cloud Run services |
+| `roles/run.viewer` | List Cloud Run services |
+| `roles/eventarc.eventReceiver` | Receive Pub/Sub events via Eventarc |
+
 ## 3. Workload Identity Federation (WIF)
 
 Set up keyless authentication from GitHub Actions to GCP.

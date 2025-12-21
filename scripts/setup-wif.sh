@@ -95,11 +95,14 @@ do
     echo "Service account $FINOPS_SA_ID already exists."
   fi
   
-  # Grant permission to update Cloud Run (idempotent)
-  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-    --member="serviceAccount:${FINOPS_SA_EMAIL}" \
-    --role="roles/run.developer" \
-    --quiet >/dev/null
+  # Grant permissions for scaling (idempotent)
+  for ROLE in roles/run.developer roles/run.viewer roles/eventarc.eventReceiver
+  do
+    gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+      --member="serviceAccount:${FINOPS_SA_EMAIL}" \
+      --role="${ROLE}" \
+      --quiet >/dev/null
+  done
 done
 
 # 6. Output Configuration for GitHub Secrets
