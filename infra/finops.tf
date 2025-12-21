@@ -1,0 +1,119 @@
+# FinOps: Automated Start/Stop for Non-Prod Infrastructure
+# This file defines the Cloud Function and Scheduler jobs for cost optimization
+
+# Zip file for Cloud Function source
+data "archive_file" "finops_source" {
+  count       = var.finops_schedule_enabled ? 1 : 0
+  type        = "zip"
+  source_dir  = "${path.module}/functions/scale-resources"
+  output_path = "${path.module}/functions/scale-resources.zip"
+}
+
+# Bucket for Cloud Function source
+resource "google_storage_bucket" "finops_source_bucket" {
+  count                       = var.finops_schedule_enabled ? 1 : 0
+  name                        = "${var.project_id}-finops-source-${var.environment}"
+  location                    = var.region
+  uniform_bucket_level_access = true
+  force_destroy               = true
+}
+
+resource "google_storage_bucket_object" "finops_zip" {
+  count  = var.finops_schedule_enabled ? 1 : 0
+  name   = "source-${data.archive_file.finops_source[0].output_md5}.zip"
+  bucket = google_storage_bucket.finops_source_bucket[0].name
+  source = data.archive_file.finops_source[0].output_path
+}
+
+# Pub/Sub Topic to trigger the function
+resource "google_pubsub_topic" "finops_trigger" {
+  count = var.finops_schedule_enabled ? 1 : 0
+  name  = "finops-scale-${var.environment}"
+}
+
+# Service Account for Cloud Function
+resource "google_service_account" "finops_sa" {
+  count        = var.finops_schedule_enabled ? 1 : 0
+  account_id   = "chuck-finops-${var.environment}"
+  display_name = "FinOps Scaling Service Account (${var.environment})"
+}
+
+# IAM: Grant permission to update Cloud Run
+resource "google_project_iam_member" "finops_run_admin" {
+  count   = var.finops_schedule_enabled ? 1 : 0
+  project = var.project_id
+  role    = "roles/run.developer"
+  member  = "serviceAccount:${google_service_account.finops_sa[0].email}"
+}
+
+# Cloud Function (Gen2)
+resource "google_cloudfunctions2_function" "scale_resources" {
+  count       = var.finops_schedule_enabled ? 1 : 0
+  name        = "scale-resources-${var.environment}"
+  location    = var.region
+  description = "Scales Cloud Run services for FinOps"
+
+  build_config {
+    runtime     = "python310"
+    entry_point = "scale_cloud_run"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.finops_source_bucket[0].name
+        object = google_storage_bucket_object.finops_zip[0].name
+      }
+    }
+  }
+
+  service_config {
+    max_instance_count    = 1
+    available_memory      = "256Mi"
+    timeout_seconds       = 60
+    service_account_email = google_service_account.finops_sa[0].email
+    environment_variables = {
+      WAKE_MIN_INSTANCES = tostring(var.min_instances)
+      GCP_REGION         = var.region
+    }
+  }
+
+  event_trigger {
+    trigger_region = var.region
+    event_type     = "google.cloud.pubsub.topic.v1.messagePublished"
+    pubsub_topic   = google_pubsub_topic.finops_trigger[0].id
+    retry_policy   = "RETRY_POLICY_RETRY"
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+# Cloud Scheduler Jobs
+resource "google_cloud_scheduler_job" "sleep_infra" {
+  count       = var.finops_schedule_enabled ? 1 : 0
+  name        = "sleep-infra-${var.environment}"
+  description = "Scales down non-prod infra at 6 PM CET"
+  schedule    = "0 18 * * 1-5" # Mon-Fri 18:00
+  time_zone   = var.finops_timezone
+
+  pubsub_target {
+    topic_name = google_pubsub_topic.finops_trigger[0].id
+    data = base64encode(jsonencode({
+      action      = "sleep"
+      environment = var.environment
+    }))
+  }
+}
+
+resource "google_cloud_scheduler_job" "wake_infra" {
+  count       = var.finops_schedule_enabled ? 1 : 0
+  name        = "wake-infra-${var.environment}"
+  description = "Scales up non-prod infra at 8 AM CET"
+  schedule    = "0 8 * * 1-5" # Mon-Fri 08:00
+  time_zone   = var.finops_timezone
+
+  pubsub_target {
+    topic_name = google_pubsub_topic.finops_trigger[0].id
+    data = base64encode(jsonencode({
+      action      = "wake"
+      environment = var.environment
+    }))
+  }
+}
