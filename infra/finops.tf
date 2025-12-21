@@ -31,16 +31,10 @@ resource "google_pubsub_topic" "finops_trigger" {
   name  = "finops-scale-${var.environment}"
 }
 
-# Service Account for Cloud Function (Managed in setup-wif.sh or Terraform)
-resource "google_service_account" "finops_sa" {
-  count        = var.finops_schedule_enabled ? 1 : 0
-  account_id   = "chuck-finops-${var.environment}"
-  display_name = "FinOps Scaling Service Account (${var.environment})"
-
-  lifecycle {
-    # Allow manual pre-creation or management outside of this specific TF run
-    ignore_changes = all
-  }
+# Service Account for Cloud Function (Managed in setup-wif.sh)
+data "google_service_account" "finops_sa" {
+  count      = var.finops_schedule_enabled ? 1 : 0
+  account_id = "chuck-finops-${var.environment}"
 }
 
 # IAM: Grant permission to update Cloud Run
@@ -48,7 +42,7 @@ resource "google_project_iam_member" "finops_run_admin" {
   count   = var.finops_schedule_enabled ? 1 : 0
   project = var.project_id
   role    = "roles/run.developer"
-  member  = "serviceAccount:${google_service_account.finops_sa[0].email}"
+  member  = "serviceAccount:${data.google_service_account.finops_sa[0].email}"
 }
 
 # Cloud Function (Gen2)
@@ -73,7 +67,7 @@ resource "google_cloudfunctions2_function" "scale_resources" {
     max_instance_count    = 1
     available_memory      = "256Mi"
     timeout_seconds       = 60
-    service_account_email = google_service_account.finops_sa[0].email
+    service_account_email = data.google_service_account.finops_sa[0].email
     environment_variables = {
       WAKE_MIN_INSTANCES = tostring(var.min_instances)
       GCP_REGION         = var.region
