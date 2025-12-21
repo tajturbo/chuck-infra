@@ -55,6 +55,27 @@ gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT" \
     --role="roles/iam.workloadIdentityUser" \
     --member="$MEMBER"
 
+# 4. Grant Project-Level Permissions to Service Account
+echo "Granting roles to Service Account (step 4/5)..."
+for ROLE in \
+  roles/run.admin \
+  roles/artifactregistry.admin \
+  roles/compute.admin \
+  roles/iam.serviceAccountUser \
+  roles/storage.admin \
+  roles/serviceusage.serviceUsageAdmin \
+  roles/cloudfunctions.admin \
+  roles/cloudscheduler.admin \
+  roles/pubsub.admin \
+  roles/cloudbuild.builds.editor
+do
+  echo "Adding role: $ROLE"
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:${SERVICE_ACCOUNT}" \
+    --role="${ROLE}" \
+    --quiet >/dev/null
+done
+
 # 5. Output Configuration for GitHub Secrets
 echo "==================================================="
 echo "Setup Complete!"

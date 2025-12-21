@@ -63,8 +63,13 @@ done
 | `roles/artifactregistry.admin` | Push images to Artifact Registry |
 | `roles/compute.admin` | Manage Load Balancer and Network groups |
 | `roles/iam.serviceAccountUser` | Act as the service account |
-| `roles/storage.admin` | Manage Terraform state in GCS |
+| `roles/storage.admin` | Manage Terraform state and Function source in GCS |
 | `roles/iam.serviceAccountTokenCreator` | Required for Workload Identity Federation |
+| `roles/serviceusage.serviceUsageAdmin` | Enable APIs for the project |
+| `roles/cloudfunctions.admin` | Manage FinOps Cloud Functions |
+| `roles/cloudscheduler.admin` | Manage FinOps Start/Stop schedules |
+| `roles/pubsub.admin` | Manage FinOps trigger topics |
+| `roles/cloudbuild.builds.editor` | Build Cloud Functions Gen2 source |
 
 ## 3. Workload Identity Federation (WIF)
 
