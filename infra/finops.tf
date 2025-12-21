@@ -31,11 +31,16 @@ resource "google_pubsub_topic" "finops_trigger" {
   name  = "finops-scale-${var.environment}"
 }
 
-# Service Account for Cloud Function
+# Service Account for Cloud Function (Managed in setup-wif.sh or Terraform)
 resource "google_service_account" "finops_sa" {
   count        = var.finops_schedule_enabled ? 1 : 0
   account_id   = "chuck-finops-${var.environment}"
   display_name = "FinOps Scaling Service Account (${var.environment})"
+
+  lifecycle {
+    # Allow manual pre-creation or management outside of this specific TF run
+    ignore_changes = all
+  }
 }
 
 # IAM: Grant permission to update Cloud Run

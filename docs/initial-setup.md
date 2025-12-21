@@ -66,6 +66,7 @@ done
 | `roles/storage.admin` | Manage Terraform state and Function source in GCS |
 | `roles/iam.serviceAccountTokenCreator` | Required for Workload Identity Federation |
 | `roles/serviceusage.serviceUsageAdmin` | Enable APIs for the project |
+| `roles/iam.serviceAccountAdmin` | Create and manage Service Accounts |
 | `roles/cloudfunctions.admin` | Manage FinOps Cloud Functions |
 | `roles/cloudscheduler.admin` | Manage FinOps Start/Stop schedules |
 | `roles/pubsub.admin` | Manage FinOps trigger topics |

@@ -64,6 +64,7 @@ for ROLE in \
   roles/iam.serviceAccountUser \
   roles/storage.admin \
   roles/serviceusage.serviceUsageAdmin \
+  roles/iam.serviceAccountAdmin \
   roles/cloudfunctions.admin \
   roles/cloudscheduler.admin \
   roles/pubsub.admin \
@@ -76,7 +77,30 @@ do
     --quiet >/dev/null
 done
 
-# 5. Output Configuration for GitHub Secrets
+# 5. Create FinOps Service Accounts (Manual Pre-creation for non-prod)
+echo "Creating FinOps Service Accounts (step 5/6)..."
+for ENV in dev stg
+do
+  FINOPS_SA_ID="chuck-finops-${ENV}"
+  FINOPS_SA_EMAIL="${FINOPS_SA_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
+  
+  if ! gcloud iam service-accounts describe "$FINOPS_SA_EMAIL" --project="$PROJECT_ID" >/dev/null 2>&1; then
+    echo "Creating service account: $FINOPS_SA_ID"
+    gcloud iam service-accounts create "$FINOPS_SA_ID" \
+      --project="$PROJECT_ID" \
+      --display-name="FinOps Scaling Service Account ($ENV)"
+  else
+    echo "Service account $FINOPS_SA_ID already exists."
+  fi
+  
+  # Grant permission to update Cloud Run (idempotent)
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:${FINOPS_SA_EMAIL}" \
+    --role="roles/run.developer" \
+    --quiet >/dev/null
+done
+
+# 6. Output Configuration for GitHub Secrets
 echo "==================================================="
 echo "Setup Complete!"
 echo "Put this value in your GitHub Secret GCP_WORKLOAD_IDENTITY_PROVIDER:"
