@@ -26,16 +26,10 @@ variable "environment" {
   type        = string
 }
 
-variable "min_instances" {
-  description = "Minimum number of instances"
+variable "desired_instances" {
+  description = "Fixed number of instances (manual scaling)"
   type        = number
-  default     = 0
-}
-
-variable "max_instances" {
-  description = "Maximum number of instances"
-  type        = number
-  default     = 10
+  default     = 1
 }
 
 variable "cpu" {
@@ -96,8 +90,8 @@ resource "google_cloud_run_v2_service" "service" {
     }
 
     scaling {
-      min_instance_count = var.min_instances
-      max_instance_count = var.max_instances
+      min_instance_count = var.desired_instances
+      max_instance_count = var.desired_instances
     }
 
     labels = {

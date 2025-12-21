@@ -31,13 +31,12 @@ resource "google_project_service" "apis" {
 module "cloud_run_primary" {
   source = "./modules/cloud-run"
 
-  project_id      = var.project_id
-  region          = var.region
-  name            = "${local.name_prefix}-primary"
-  container_image = local.container_image
-  environment     = var.environment
-  min_instances   = var.desired_instances
-  max_instances   = var.desired_instances
+  project_id        = var.project_id
+  region            = var.region
+  name              = "${local.name_prefix}-primary"
+  container_image   = local.container_image
+  environment       = var.environment
+  desired_instances = var.desired_instances
 
   depends_on = [google_project_service.apis]
 }
@@ -46,13 +45,12 @@ module "cloud_run_primary" {
 module "cloud_run_secondary" {
   source = "./modules/cloud-run"
 
-  project_id      = var.project_id
-  region          = var.secondary_region
-  name            = "${local.name_prefix}-secondary"
-  container_image = local.container_image
-  environment     = var.environment
-  min_instances   = var.desired_instances
-  max_instances   = var.desired_instances
+  project_id        = var.project_id
+  region            = var.secondary_region
+  name              = "${local.name_prefix}-secondary"
+  container_image   = local.container_image
+  environment       = var.environment
+  desired_instances = var.desired_instances
 
   depends_on = [google_project_service.apis]
 }
