@@ -90,8 +90,8 @@ resource "google_cloud_run_v2_service" "service" {
     }
 
     scaling {
-      scaling_mode          = "MANUAL"
-      manual_instance_count = var.desired_instances
+      min_instance_count = var.desired_instances
+      max_instance_count = var.desired_instances
     }
 
     labels = {

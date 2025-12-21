@@ -17,8 +17,7 @@ Provisions a Google Cloud Run (v2) service with standard defaults for internal a
 | `name` | Service name | `string` | n/a | yes |
 | `container_image` | Docker image to deploy | `string` | n/a | yes |
 | `environment` | Environment label (dev/stg/prod) | `string` | n/a | yes |
-| `min_instances` | Minimum number of instances | `number` | `0` | no |
-| `max_instances` | Maximum number of instances | `number` | `10` | no |
+| `desired_instances` | Fixed number of instances (manual scaling) | `number` | `1` | no |
 
 ## Outputs
 
