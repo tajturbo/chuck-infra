@@ -20,11 +20,13 @@ def scale_cloud_run(event, context):
 
     action = payload.get('action') # 'sleep' or 'wake'
     env = payload.get('environment')
-    project_id = os.environ.get('GCP_PROJECT')
-    region = os.environ.get('GCP_REGION', 'us-central1') # Default but should be set
+    
+    # Try common environment variables for project ID
+    project_id = os.environ.get('GCP_PROJECT') or os.environ.get('GOOGLE_CLOUD_PROJECT') or os.environ.get('PROJECT_ID')
+    region = os.environ.get('GCP_REGION', 'us-central1')
 
-    if not action or not env:
-        print(f"Missing action ({action}) or environment ({env})")
+    if not action or not env or not project_id:
+        print(f"Missing action ({action}), environment ({env}), or project_id ({project_id})")
         return
 
     client = run_v2.ServicesClient()

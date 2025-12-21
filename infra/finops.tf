@@ -63,6 +63,7 @@ resource "google_cloudfunctions2_function" "scale_resources" {
     environment_variables = {
       WAKE_MIN_INSTANCES = tostring(var.min_instances)
       GCP_REGION         = var.region
+      GCP_PROJECT        = var.project_id
     }
   }
 
