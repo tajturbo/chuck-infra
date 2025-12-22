@@ -199,10 +199,14 @@ def scale_cloud_run(event, context=None):
                 scaling.min_instance_count = target_min
                 scaling.max_instance_count = target_max
 
-                req = run_v2.UpdateServiceRequest(
-                    service=service,
-                    update_mask=FieldMask(paths=update_paths),
-                )
+                # Some older google-cloud-run client versions (e.g. 0.10.5) do not expose
+                # UpdateServiceRequest.update_mask. Prefer using it when available, but
+                # fall back to sending the full Service without an update mask.
+                req = run_v2.UpdateServiceRequest(service=service)
+                try:
+                    req.update_mask = FieldMask(paths=update_paths)
+                except Exception as e:
+                    print(f"UpdateServiceRequest.update_mask not supported; continuing without update mask: {e}")
                 op = client.update_service(request=req)
                 updated += 1
                 print(f"Update started: {service.name} op={op.operation.name}")
