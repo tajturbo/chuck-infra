@@ -11,7 +11,7 @@ output "cloud_run_primary_url" {
 }
 
 output "cloud_run_secondary_url" {
-  description = "Secondary Cloud Run service URL"  
+  description = "Secondary Cloud Run service URL"
   value       = module.cloud_run_secondary.service_url
 }
 

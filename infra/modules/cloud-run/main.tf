@@ -50,6 +50,8 @@ resource "google_cloud_run_v2_service" "service" {
   location = var.region
   project  = var.project_id
 
+  ingress = "INGRESS_TRAFFIC_ALL"
+
   template {
     containers {
       image = var.container_image
@@ -117,6 +119,9 @@ resource "google_cloud_run_v2_service" "service" {
       traffic,
       client,
       client_version,
+      # Allow FinOps scheduler to temporarily change scaling and ingress.
+      template[0].scaling,
+      ingress,
     ]
   }
 }

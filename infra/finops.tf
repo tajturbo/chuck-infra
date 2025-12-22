@@ -63,8 +63,14 @@ resource "google_cloudfunctions2_function" "scale_resources" {
     environment_variables = {
       WAKE_MIN_INSTANCES = tostring(var.desired_instances)
       WAKE_MAX_INSTANCES = tostring(var.desired_instances)
-      GCP_REGION         = var.region
-      GCP_PROJECT        = var.project_id
+      # Target both regions from one controller function.
+      GCP_REGIONS = "${var.region},${var.secondary_region}"
+      GCP_PROJECT = var.project_id
+      # Only manage the two app services created by this stack.
+      TARGET_SERVICE_IDS = "chuck-${var.environment}-primary,chuck-${var.environment}-secondary"
+      # Make the services unreachable after-hours by removing all ingress.
+      SLEEP_INGRESS = "INGRESS_TRAFFIC_NONE"
+      WAKE_INGRESS  = "INGRESS_TRAFFIC_ALL"
     }
   }
 
@@ -82,8 +88,8 @@ resource "google_cloudfunctions2_function" "scale_resources" {
 resource "google_cloud_scheduler_job" "sleep_infra" {
   count       = var.finops_schedule_enabled ? 1 : 0
   name        = "sleep-infra-${var.environment}"
-  description = "Scales down non-prod infra at 6 PM CET"
-  schedule    = "0 18 * * 1-5" # Mon-Fri 18:00
+  description = "Makes services unreachable + scales to 0 at 17:00 UTC"
+  schedule    = "0 17 * * 1-5" # Mon-Fri 17:00 UTC (18:00 CET in winter)
   time_zone   = var.finops_timezone
 
   pubsub_target {
@@ -98,8 +104,8 @@ resource "google_cloud_scheduler_job" "sleep_infra" {
 resource "google_cloud_scheduler_job" "wake_infra" {
   count       = var.finops_schedule_enabled ? 1 : 0
   name        = "wake-infra-${var.environment}"
-  description = "Scales up non-prod infra at 8 AM CET"
-  schedule    = "0 8 * * 1-5" # Mon-Fri 08:00
+  description = "Restores ingress + scales to 1 at 07:00 UTC"
+  schedule    = "0 7 * * 1-5" # Mon-Fri 07:00 UTC (08:00 CET in winter)
   time_zone   = var.finops_timezone
 
   pubsub_target {

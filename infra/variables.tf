@@ -50,5 +50,5 @@ variable "finops_schedule_enabled" {
 variable "finops_timezone" {
   description = "Timezone for the FinOps schedule"
   type        = string
-  default     = "Europe/Prague" # CET/CEST
+  default     = "Etc/UTC"
 }
