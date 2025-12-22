@@ -15,11 +15,6 @@ resource "google_project_service" "apis" {
     "run.googleapis.com",
     "artifactregistry.googleapis.com",
     "compute.googleapis.com",
-    "cloudscheduler.googleapis.com",
-    "cloudfunctions.googleapis.com",
-    "pubsub.googleapis.com",
-    "cloudbuild.googleapis.com", # Required for Cloud Functions Gen2
-    "eventarc.googleapis.com",   # Required for Cloud Functions Gen2 triggers
   ])
 
   project            = var.project_id

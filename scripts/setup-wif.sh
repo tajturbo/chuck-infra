@@ -65,12 +65,7 @@ for ROLE in \
   roles/storage.admin \
   roles/serviceusage.serviceUsageAdmin \
   roles/iam.serviceAccountAdmin \
-  roles/resourcemanager.projectIamAdmin \
-  roles/eventarc.admin \
-  roles/cloudfunctions.admin \
-  roles/cloudscheduler.admin \
-  roles/pubsub.admin \
-  roles/cloudbuild.builds.editor
+  roles/resourcemanager.projectIamAdmin
 do
   echo "Adding role: $ROLE"
   gcloud projects add-iam-policy-binding "$PROJECT_ID" \
@@ -78,43 +73,7 @@ do
     --role="${ROLE}" \
     --quiet >/dev/null
 done
-
-# 5. Create FinOps Service Accounts (Manual Pre-creation for non-prod)
-echo "Creating FinOps Service Accounts (step 5/6)..."
-for ENV in dev stg
-do
-  FINOPS_SA_ID="chuck-finops-${ENV}"
-  FINOPS_SA_EMAIL="${FINOPS_SA_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
-  
-  if ! gcloud iam service-accounts describe "$FINOPS_SA_EMAIL" --project="$PROJECT_ID" >/dev/null 2>&1; then
-    echo "Creating service account: $FINOPS_SA_ID"
-    gcloud iam service-accounts create "$FINOPS_SA_ID" \
-      --project="$PROJECT_ID" \
-      --display-name="FinOps Scaling Service Account ($ENV)"
-  else
-    echo "Service account $FINOPS_SA_ID already exists."
-  fi
-  
-  # Grant permissions for scaling (idempotent)
-  for ROLE in roles/run.developer roles/run.viewer roles/eventarc.eventReceiver roles/artifactregistry.reader
-  do
-    gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-      --member="serviceAccount:${FINOPS_SA_EMAIL}" \
-      --role="${ROLE}" \
-      --quiet >/dev/null
-  done
-
-  # Grant Service Account User role on the default Compute SA (required for Cloud Run updates)
-  DEFAULT_COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-  echo "Granting roles/iam.serviceAccountUser to ${FINOPS_SA_ID} on ${DEFAULT_COMPUTE_SA}"
-  gcloud iam service-accounts add-iam-policy-binding "${DEFAULT_COMPUTE_SA}" \
-    --project="${PROJECT_ID}" \
-    --member="serviceAccount:${FINOPS_SA_EMAIL}" \
-    --role="roles/iam.serviceAccountUser" \
-    --quiet >/dev/null
-done
-
-# 6. Output Configuration for GitHub Secrets
+# 5. Output Configuration for GitHub Secrets
 echo "==================================================="
 echo "Setup Complete!"
 echo "Put this value in your GitHub Secret GCP_WORKLOAD_IDENTITY_PROVIDER:"

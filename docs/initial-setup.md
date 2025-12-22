@@ -63,26 +63,11 @@ done
 | `roles/artifactregistry.admin` | Push images to Artifact Registry |
 | `roles/compute.admin` | Manage Load Balancer and Network groups |
 | `roles/iam.serviceAccountUser` | Act as the service account |
-| `roles/storage.admin` | Manage Terraform state and Function source in GCS |
+| `roles/storage.admin` | Manage Terraform state in GCS |
 | `roles/iam.serviceAccountTokenCreator` | Required for Workload Identity Federation |
 | `roles/serviceusage.serviceUsageAdmin` | Enable APIs for the project |
 | `roles/iam.serviceAccountAdmin` | Create and manage Service Accounts |
 | `roles/resourcemanager.projectIamAdmin` | Manage project-level IAM policies |
-| `roles/eventarc.admin` | Manage Eventarc triggers for Functions |
-| `roles/cloudfunctions.admin` | Manage FinOps Cloud Functions |
-| `roles/cloudscheduler.admin` | Manage FinOps Start/Stop schedules |
-| `roles/pubsub.admin` | Manage FinOps trigger topics |
-| `roles/cloudbuild.builds.editor` | Build Cloud Functions Gen2 source |
-
-### FinOps Service Account Roles
-The `chuck-finops-${env}` service accounts require:
-| Role | Purpose |
-|------|---------|
-| `roles/run.developer` | Scale Cloud Run services |
-| `roles/run.viewer` | List Cloud Run services |
-| `roles/eventarc.eventReceiver` | Receive Pub/Sub events via Eventarc |
-| `roles/artifactregistry.reader` | Access container images during update |
-| `roles/iam.serviceAccountUser` | Act as the Cloud Run service account |
 
 ## 3. Workload Identity Federation (WIF)
 

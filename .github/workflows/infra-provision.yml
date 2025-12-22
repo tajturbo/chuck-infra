@@ -139,7 +139,6 @@ jobs:
             -var="environment=${{ env.ENV }}" \
             -var="region=${{ env.REGION }}" \
             -var="secondary_region=${{ env.SECONDARY_REGION }}" \
-            -var="finops_schedule_enabled=${{ env.ENV != 'prod' }}" \
             -out=tfplan \
             -no-color
         continue-on-error: true
@@ -161,7 +160,6 @@ jobs:
             -var="environment=${{ env.ENV }}" \
             -var="region=${{ env.REGION }}" \
             -var="secondary_region=${{ env.SECONDARY_REGION }}" \
-            -var="finops_schedule_enabled=${{ env.ENV != 'prod' }}" \
             -auto-approve
 
       - name: Terraform Outputs
