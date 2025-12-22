@@ -68,9 +68,8 @@ resource "google_cloudfunctions2_function" "scale_resources" {
       GCP_PROJECT = var.project_id
       # Only manage the two app services created by this stack.
       TARGET_SERVICE_IDS = "chuck-${var.environment}-primary,chuck-${var.environment}-secondary"
-      # Make the services unreachable after-hours by restricting to internal traffic.
-      # (google-cloud-run==0.10.5 does not expose INGRESS_TRAFFIC_NONE)
-      SLEEP_INGRESS = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+      # Keep ingress type as ALL at all times.
+      SLEEP_INGRESS = "INGRESS_TRAFFIC_ALL"
       WAKE_INGRESS  = "INGRESS_TRAFFIC_ALL"
     }
   }
