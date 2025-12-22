@@ -25,10 +25,29 @@ def _get_ingress_enum(name: str) -> int:
     Expected values are like: INGRESS_TRAFFIC_ALL, INGRESS_TRAFFIC_NONE,
     INGRESS_TRAFFIC_INTERNAL_ONLY, INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER.
     """
+    raw = (name or "").strip()
+    if not raw:
+        raise ValueError("Invalid ingress value: empty")
+
+    # Allow shorter aliases.
+    aliases = {
+        "ALL": "INGRESS_TRAFFIC_ALL",
+        "INTERNAL_ONLY": "INGRESS_TRAFFIC_INTERNAL_ONLY",
+        "INTERNAL_LOAD_BALANCER": "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER",
+        "NONE": "INGRESS_TRAFFIC_NONE",
+    }
+    enum_name = aliases.get(raw, raw)
+
+    # google-cloud-run==0.10.5 does not expose INGRESS_TRAFFIC_NONE.
+    # For the FinOps requirement "service unreachable", INTERNAL_ONLY is sufficient
+    # for an internet-facing service / external HTTP(S) load balancer.
+    if enum_name == "INGRESS_TRAFFIC_NONE" and not hasattr(run_v2.IngressTraffic, enum_name):
+        enum_name = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+
     try:
-        return getattr(run_v2.IngressTraffic, name)
+        return getattr(run_v2.IngressTraffic, enum_name)
     except Exception as e:
-        raise ValueError(f"Invalid ingress value '{name}': {e}")
+        raise ValueError(f"Invalid ingress value '{raw}' (resolved to {enum_name}): {e}")
 
 
 def _extract_pubsub_message_data_b64(event) -> str | bytes | None:
