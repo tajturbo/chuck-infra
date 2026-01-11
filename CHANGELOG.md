@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.2.0](https://github.com/tajturbo/chuck-infra/compare/v0.1.2...v0.2.0) (2026-01-11)
+
+
+### Features
+
+* automatically enable FinOps schedule for non-prod environments in GHA workflow ([6d03fa1](https://github.com/tajturbo/chuck-infra/commit/6d03fa1a1dd1b86cecc5d56673fe43096faa6820))
+* disable autoscaling and implement fixed 1-instance scaling with FinOps support ([cf38c75](https://github.com/tajturbo/chuck-infra/commit/cf38c7539b1634f06742aaec8bc8dd407e44f7e1))
+* enforce manual scaling with single desired_instances variable ([a158006](https://github.com/tajturbo/chuck-infra/commit/a158006cf2d1cc9f3e6fa0106ffc14da44f7decd))
+* **finops:** schedule sleep/wake for Cloud Run in UTC ([18ce402](https://github.com/tajturbo/chuck-infra/commit/18ce4022796c228def6177fd7018e67a56a4713e))
+* implement automated FinOps start/stop schedule for non-prod ([#6](https://github.com/tajturbo/chuck-infra/issues/6)) ([fa55149](https://github.com/tajturbo/chuck-infra/commit/fa551493f149b2e9a83d217468610dfc242ebc06))
+* **infra:** add deletion_protection=false to Cloud Run service ([50ff909](https://github.com/tajturbo/chuck-infra/commit/50ff9092a0859fce5843708d5e5d76f78966bb36))
+* simplify manual scaling using min/max constraints ([91d9d74](https://github.com/tajturbo/chuck-infra/commit/91d9d746c2515670ca69c2b687b8d235baac010f))
+* use native Cloud Run v2 manual scaling mode ([dae23aa](https://github.com/tajturbo/chuck-infra/commit/dae23aa5becf6161390b71d1902c00653fb424b8))
+
+
+### Bug Fixes
+
+* enable eventarc API and grant project IAM admin to deployer ([80669fb](https://github.com/tajturbo/chuck-infra/commit/80669fbe4121c09d7efee32f47818dde060ea3ca))
+* **finops:** avoid update_mask for older run client ([973292a](https://github.com/tajturbo/chuck-infra/commit/973292ac77492725493102ecff75fb388591c5f8))
+* **finops:** grant additional Eventarc and Run Viewer roles to FinOps SAs ([497d3b2](https://github.com/tajturbo/chuck-infra/commit/497d3b24f50d96cb60316e25e03792dffdd7a15a))
+* **finops:** grant artifactregistry.reader to FinOps SAs ([fffb8a7](https://github.com/tajturbo/chuck-infra/commit/fffb8a7c1f762987e7a50c9311f497c7fad9a20b))
+* **finops:** grant Service Account User permission to FinOps SAs on default compute SA ([5e36aa6](https://github.com/tajturbo/chuck-infra/commit/5e36aa6af567664f2109c1307aca3a6e7ea4a28f))
+* **finops:** handle ingress NONE with older client ([9e28022](https://github.com/tajturbo/chuck-infra/commit/9e2802257f4795b969bce46ca4473f12a96fdcd3))
+* **finops:** keep ingress ALL during sleep ([9d412ee](https://github.com/tajturbo/chuck-infra/commit/9d412eeb123d22d56adc645fd0ec9142420ee3b9))
+* pass GCP_PROJECT to Cloud Function and refine project_id detection in main.py ([f0c2239](https://github.com/tajturbo/chuck-infra/commit/f0c2239e53f8efcdf11c07b9cdc97293dbd1ecf8))
+* pre-create FinOps SAs in setup-wif.sh and add Service Account Admin role ([f4abed4](https://github.com/tajturbo/chuck-infra/commit/f4abed47e5e24a9150b0029d171eafa2f471b957))
+* **wif:** grant necessary IAM permissions for FinOps resources in setup-wif.sh ([01fdefc](https://github.com/tajturbo/chuck-infra/commit/01fdefca6bd7f5b2fd979f460b9171af7e9aa7ab))
+
+
+### Documentation
+
+* update scaling terminology to manual scaling ([4c68f58](https://github.com/tajturbo/chuck-infra/commit/4c68f58f6944bdbbb8ca5f78fc049b52fc7a4852))
+
 ## [0.1.2](https://github.com/tajturbo/chuck-infra/compare/v0.1.1...v0.1.2) (2025-12-18)
 
 
