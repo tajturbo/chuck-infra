@@ -46,9 +46,10 @@ variable "memory" {
 
 # Cloud Run Service (using v2 API for better traffic management)
 resource "google_cloud_run_v2_service" "service" {
-  name     = var.name
-  location = var.region
-  project  = var.project_id
+  name                = var.name
+  location            = var.region
+  project             = var.project_id
+  deletion_protection = false
 
   template {
     containers {
